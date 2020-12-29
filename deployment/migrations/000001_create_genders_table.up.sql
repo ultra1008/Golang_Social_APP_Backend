@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS genders (
+    id int NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100),
+    PRIMARY KEY (id)
+);
