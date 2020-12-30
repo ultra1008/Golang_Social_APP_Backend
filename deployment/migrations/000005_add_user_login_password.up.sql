@@ -1,3 +1,3 @@
 ALTER TABLE users
-ADD password VARCHAR(10) NOT NULL UNIQUE AFTER last_name,
+ADD password VARCHAR(10) NOT NULL AFTER last_name,
 ADD login VARCHAR(50) NOT NULL UNIQUE AFTER last_name;

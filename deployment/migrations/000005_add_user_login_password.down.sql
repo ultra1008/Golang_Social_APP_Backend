@@ -1,3 +1,3 @@
 ALTER TABLE users
-DROP COLUMN login;
+DROP COLUMN login,
 DROP COLUMN password;
