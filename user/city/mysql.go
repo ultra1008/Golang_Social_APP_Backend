@@ -2,6 +2,7 @@ package city
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -48,4 +49,20 @@ func (m *mysql) List() ([]City, error) {
 	}
 
 	return citys, nil
+}
+
+func (m *mysql) GetByID(id int) (*City, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), queryMap[listCitys].Timeout)
+	defer cancel()
+
+	var city City
+
+	err := m.db.GetContext(ctx, &city, queryMap[getByID].SQL, id)
+	if err == sql.ErrNoRows {
+		if err != nil {
+			return nil, fmt.Errorf("getting city by ID: %v", err)
+		}
+	}
+
+	return &city, nil
 }

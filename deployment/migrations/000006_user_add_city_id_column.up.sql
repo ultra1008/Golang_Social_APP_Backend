@@ -1,0 +1,5 @@
+ALTER TABLE users
+ADD city_id int,
+ADD FOREIGN KEY (city_id)
+    REFERENCES citys(id)
+    ON UPDATE CASCADE ON DELETE RESTRICT;

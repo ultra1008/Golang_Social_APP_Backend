@@ -1,6 +1,7 @@
 package city
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
@@ -22,7 +23,7 @@ func Test_mysql_Create(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "mysql")
 	repo := NewRepository(sqlxDB)
 
-	mockRows := sqlmock.NewRows([]string{"id", "name", "created_by_user"}).AddRow(1, testCityName, 0)
+	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, testCityName, 0)
 	mock.ExpectQuery("INSERT INTO citys").WithArgs(testCityName).WillReturnRows(mockRows)
 
 	city, err := repo.Create(testCityName)
@@ -68,8 +69,8 @@ func Test_mysql_List(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "mysql")
 	repo := NewRepository(sqlxDB)
 
-	mockRows := sqlmock.NewRows([]string{"id", "name", "created_by_user"}).AddRow(1, testCityName, 0)
-	mock.ExpectQuery("SELECT id, name, created_by_user").WillReturnRows(mockRows)
+	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, testCityName, 0)
+	mock.ExpectQuery("SELECT id, city_name, created_by_user").WillReturnRows(mockRows)
 
 	city, err := repo.List()
 
@@ -96,19 +97,19 @@ func Test_mysql_List_MultipleRows(t *testing.T) {
 	}{
 		{
 			Name:        "2 rows",
-			Rows:        sqlmock.NewRows([]string{"id", "name", "created_by_user"}).AddRow(1, "Test1", 0).AddRow(2, "Test2", 0),
+			Rows:        sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, "Test1", 0).AddRow(2, "Test2", 0),
 			ExpectedLen: 2,
 		},
 		{
 			Name:        "3 rows",
-			Rows:        sqlmock.NewRows([]string{"id", "name", "created_by_user"}).AddRow(1, "Test1", 0).AddRow(2, "Test2", 0).AddRow(3, "Test3", 0),
+			Rows:        sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, "Test1", 0).AddRow(2, "Test2", 0).AddRow(3, "Test3", 0),
 			ExpectedLen: 3,
 		},
 	}
 
 	for _, cc := range tc {
 		t.Run(cc.Name, func(t *testing.T) {
-			mock.ExpectQuery("SELECT id, name, created_by_user").WillReturnRows(cc.Rows)
+			mock.ExpectQuery("SELECT id, city_name, created_by_user").WillReturnRows(cc.Rows)
 
 			citys, err := repo.List()
 			assert.Nil(t, err)
@@ -129,7 +130,7 @@ func Test_mysql_List_Error(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "mysql")
 	repo := NewRepository(sqlxDB)
 
-	mock.ExpectQuery("SELECT id, name, created_by_user").WillReturnError(testError)
+	mock.ExpectQuery("SELECT id, city_name, created_by_user").WillReturnError(testError)
 
 	city, err := repo.List()
 
@@ -138,4 +139,47 @@ func Test_mysql_List_Error(t *testing.T) {
 	if !strings.Contains(err.Error(), testError.Error()) {
 		t.Errorf("got: %v; should contain %v", err, testError)
 	}
+}
+
+func Test_mysql_GetByID(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	testCityID := 10
+
+	sqlxDB := sqlx.NewDb(db, "mysql")
+	repo := NewRepository(sqlxDB)
+
+	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(testCityID, "Moscow", 0)
+	mock.ExpectQuery("SELECT id, city_name").WithArgs(testCityID).WillReturnRows(mockRows)
+
+	city, err := repo.GetByID(testCityID)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, city)
+	assert.Equal(t, testCityID, city.ID)
+}
+
+func Test_mysql_GetByID_ErrNoRows(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	testCityID := 10
+
+	sqlxDB := sqlx.NewDb(db, "mysql")
+	repo := NewRepository(sqlxDB)
+
+	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"})
+	mock.ExpectQuery("SELECT id, city_name").WithArgs(testCityID).WillReturnRows(mockRows)
+
+	_, err = repo.GetByID(testCityID)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, sql.ErrNoRows)
 }

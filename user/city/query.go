@@ -10,6 +10,7 @@ type SQLQuery struct {
 const (
 	createNewCity = iota
 	listCitys
+	getByID
 )
 
 var queryMap map[int]SQLQuery
@@ -18,14 +19,19 @@ func init() {
 	queryMap = make(map[int]SQLQuery)
 
 	queryMap[createNewCity] = SQLQuery{
-		SQL: `INSERT INTO citys (` + "`name`" + `) VALUES (':name')
+		SQL: `INSERT INTO citys (` + "`city_name`, " + "`created_by_user`" + `) VALUES (':city_name', 1)
 				ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id);
 				SELECT LAST_INSERT_ID();`,
 		Timeout: 10 * time.Second,
 	}
 
 	queryMap[listCitys] = SQLQuery{
-		SQL:     `SELECT id, name, created_by_user FROM citys`,
+		SQL:     `SELECT id, city_name, created_by_user FROM citys WHERE created_by_user = 0 ORDER BY city_name`,
+		Timeout: 10 * time.Second,
+	}
+
+	queryMap[getByID] = SQLQuery{
+		SQL:     `SELECT id, city_name, created_by_user FROM citys WHERE id = ?`,
 		Timeout: 10 * time.Second,
 	}
 }
