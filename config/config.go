@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	DB *DBConfig
+	DB     *DBConfig
+	Server *HTTPServerConfig
 }
 
 type DBConfig struct {
@@ -20,6 +21,10 @@ type DBConfig struct {
 
 func (d *DBConfig) ConnectionString() string {
 	return fmt.Sprintf("mysql://%s:%s@tcp(%s:%d)/%s", d.Login, d.Password, d.Host, d.Port, d.DBName)
+}
+
+type HTTPServerConfig struct {
+	Port int `envconfig:"HTTP_SERVER_PORT" default:"8080"`
 }
 
 func New() (*Config, error) {
