@@ -1,13 +1,11 @@
 package city
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,11 +18,9 @@ func Test_mysql_Create(t *testing.T) {
 
 	testCityName := "Test"
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
-	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, testCityName, 0)
-	mock.ExpectQuery("INSERT INTO citys").WithArgs(testCityName).WillReturnRows(mockRows)
+	mock.ExpectExec("INSERT INTO citys").WithArgs(testCityName).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	city, err := repo.Create(testCityName)
 
@@ -43,10 +39,9 @@ func Test_mysql_Create_Error(t *testing.T) {
 	testError := fmt.Errorf("test error")
 	testCityName := "TestCity"
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
-	mock.ExpectQuery("INSERT INTO citys").WithArgs(testCityName).WillReturnError(testError)
+	mock.ExpectExec("INSERT INTO citys").WithArgs(testCityName).WillReturnError(testError)
 
 	city, err := repo.Create(testCityName)
 
@@ -66,8 +61,7 @@ func Test_mysql_List(t *testing.T) {
 
 	testCityName := "Test"
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
 	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(1, testCityName, 0)
 	mock.ExpectQuery("SELECT id, city_name, created_by_user").WillReturnRows(mockRows)
@@ -87,8 +81,7 @@ func Test_mysql_List_MultipleRows(t *testing.T) {
 	}
 	defer db.Close()
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
 	tc := []struct {
 		Name        string
@@ -127,8 +120,7 @@ func Test_mysql_List_Error(t *testing.T) {
 
 	testError := fmt.Errorf("test error")
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
 	mock.ExpectQuery("SELECT id, city_name, created_by_user").WillReturnError(testError)
 
@@ -150,8 +142,7 @@ func Test_mysql_GetByID(t *testing.T) {
 
 	testCityID := 10
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
 	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(testCityID, "Moscow", 0)
 	mock.ExpectQuery("SELECT id, city_name").WithArgs(testCityID).WillReturnRows(mockRows)
@@ -172,14 +163,13 @@ func Test_mysql_GetByID_ErrNoRows(t *testing.T) {
 
 	testCityID := 10
 
-	sqlxDB := sqlx.NewDb(db, "mysql")
-	repo := NewRepository(sqlxDB)
+	repo := NewRepository(db)
 
 	mockRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"})
 	mock.ExpectQuery("SELECT id, city_name").WithArgs(testCityID).WillReturnRows(mockRows)
 
-	_, err = repo.GetByID(testCityID)
+	res, err := repo.GetByID(testCityID)
 
-	assert.NotNil(t, err)
-	assert.Error(t, err, sql.ErrNoRows)
+	assert.Nil(t, err)
+	assert.Nil(t, res)
 }

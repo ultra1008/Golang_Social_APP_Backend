@@ -20,9 +20,8 @@ func init() {
 	queryMap = make(map[int]Query)
 
 	queryMap[createQuery] = Query{
-		SQL: `INSERT INTO users (first_name, last_name, age, sex_id, city_id, login, password)
-				VALUES (:first_name, :last_name, :age, :sex_id, :city_id, :login, :password);
-				SELECT LAST_INSERT_ID();`,
+		SQL: `INSERT INTO users (first_name, last_name, age, sex, city_id, login, password)
+				VALUES (?, ?, ?, ?, ?, ?, ?);`,
 		Timeout: 10 * time.Second,
 	}
 
@@ -31,14 +30,12 @@ func init() {
 			, u.first_name
 			, u.last_name
 			, u.age
-			, u.sex_id
-			, g.name as sex
+			, u.sex
 			, u.login
 			, u.city_id
 			, c.city_name
 				FROM users as u
 						LEFT JOIN citys as c ON u.city_id = c.id
-						LEFT JOIN genders as g ON u.sex_id = g.id
 				ORDER BY u.first_name`,
 		Timeout: 10 * time.Second,
 	}
@@ -48,16 +45,15 @@ func init() {
 			, u.first_name
 			, u.last_name
 			, u.age
-			, u.sex_id
-			, g.name as sex
+			, u.sex
 			, u.login
 			, u.city_id
 			, c.city_name
+			, u.password
 				FROM users as u
 						LEFT JOIN citys as c ON u.city_id = c.id
-						LEFT JOIN genders as g ON u.sex_id = g.id
 				ORDER BY u.first_name
-				WHERE u.id = :id`,
+				WHERE u.id = ?`,
 		Timeout: 10 * time.Second,
 	}
 
@@ -66,16 +62,15 @@ func init() {
 			, u.first_name
 			, u.last_name
 			, u.age
-			, u.sex_id
-			, g.name as sex
+			, u.sex
 			, u.login
 			, u.city_id
 			, c.city_name
+			, u.password
 				FROM users as u
 						LEFT JOIN citys as c ON u.city_id = c.id
-						LEFT JOIN genders as g ON u.sex_id = g.id
-				ORDER BY u.first_name
-				WHERE u.login = :login`,
+				WHERE u.login = ?
+				ORDER BY u.first_name`,
 		Timeout: 10 * time.Second,
 	}
 }

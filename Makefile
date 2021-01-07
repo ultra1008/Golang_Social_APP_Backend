@@ -1,13 +1,13 @@
-.PHONY: build test docker
+.PHONY: build test
 
 build:
-	go build -v -o ./build/highload-social-network ./cmd/highload-social-network
+	go build -v ./cmd/highload-social-network
 
 run:
 	./build/highload-social-network
 
-docker up:
+up:
 	docker-compose -f deployment/docker-compose.yml up
 
-docker down:
+down:
 	docker-compose -f deployment/docker-compose.yml down

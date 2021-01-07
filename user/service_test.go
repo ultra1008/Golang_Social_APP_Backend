@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jmoiron/sqlx"
 	"github.com/niklod/highload-social-network/user/city"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,17 +12,13 @@ import (
 func TestService_Create(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	cityDb, cityMock, _ := sqlmock.New()
-	sqlxDB := sqlx.NewDb(cityDb, "mysql")
 
 	testUser := &User{
 		ID:        1,
 		FirstName: "testFirstName",
 		Lastname:  "testLastName",
 		Age:       12,
-		Sex: Sex{
-			ID:   1,
-			Name: "Мужской",
-		},
+		Sex:       "Женщина",
 		City: city.City{
 			ID:   1,
 			Name: "Москва",
@@ -33,12 +28,12 @@ func TestService_Create(t *testing.T) {
 	}
 
 	repo := NewRepository(db)
-	cityRepo := city.NewRepository(sqlxDB)
+	cityRepo := city.NewRepository(cityDb)
 	citySvc := city.NewService(cityRepo)
 	userSvc := NewService(repo, citySvc)
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	cityRows := sqlmock.NewRows([]string{"id", "city_name", "created_by_user"}).AddRow(testUser.City.ID, testUser.City.Name, 0)
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	cityRows := sqlmock.NewRows([]string{"id"}).AddRow(testUser.City.ID)
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testUser.Login).WillReturnRows(rows)
 	mock.ExpectExec("INSERT INTO users").WillReturnResult(sqlmock.NewResult(int64(testUser.ID), 1))
@@ -55,17 +50,13 @@ func TestService_Create_UserAlreadyExist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sqlxDB := sqlx.NewDb(db, "mysql")
 
 	testUser := &User{
 		ID:        1,
 		FirstName: "testFirstName",
 		Lastname:  "testLastName",
 		Age:       12,
-		Sex: Sex{
-			ID:   1,
-			Name: "Мужской",
-		},
+		Sex:       "Мужчина",
 		City: city.City{
 			ID:   1,
 			Name: "Москва",
@@ -75,13 +66,13 @@ func TestService_Create_UserAlreadyExist(t *testing.T) {
 	}
 
 	repo := NewRepository(db)
-	cityRepo := city.NewRepository(sqlxDB)
+	cityRepo := city.NewRepository(db)
 	citySvc := city.NewService(cityRepo)
 	userSvc := NewService(repo, citySvc)
 	expectedErrorString := "user already exist"
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, 1, "Мужчина", testUser.Login, 1, "TestCity")
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", testUser.Login, 1, "TestCity")
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testUser.Login).WillReturnRows(rows)
 

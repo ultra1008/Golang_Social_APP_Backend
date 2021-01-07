@@ -1,0 +1,35 @@
+{{define "header"}}
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Главная</a>
+                        </li>
+                    </ul>
+                    {{if not .}}
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/login">Вход</a>
+                        </li>
+                        <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/registrate">Регистрация</a>
+                        </li>
+                    </ul>
+                    {{else}}
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ .Login }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="/user/{{ .Login }}">Моя страница</a></li>
+                                <li><a class="dropdown-item" href="/logout">Выход</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    {{end}}
+                </div>
+            </div>
+        </nav>
+{{end}}

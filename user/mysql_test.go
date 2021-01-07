@@ -23,9 +23,7 @@ func Test_mysql_Create(t *testing.T) {
 		FirstName: "TestFirst",
 		Lastname:  "TestLast",
 		Age:       12,
-		Sex: Sex{
-			ID: 1,
-		},
+		Sex:       "Мужчина",
 	}
 
 	res, err := repo.Create(testUser)
@@ -52,9 +50,7 @@ func Test_mysql_Create_WrongCityID(t *testing.T) {
 		FirstName: "TestFirst",
 		Lastname:  "TestLast",
 		Age:       12,
-		Sex: Sex{
-			ID: 1,
-		},
+		Sex:       "Мужчина",
 	}
 
 	res, err := repo.Create(testUser)
@@ -72,8 +68,8 @@ func Test_mysql_List(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := NewRepository(db)
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, 1, "Мужчина", "TestLogin", 1, "TestCity")
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", 1, "TestCity")
 
 	mock.ExpectQuery("INSERT INTO users").WillReturnRows(rows)
 	users, err := repo.List()
@@ -88,8 +84,8 @@ func Test_mysql_GetByID(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := NewRepository(db)
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, 1, "Мужчина", "TestLogin", 1, "TestCity")
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", 1, "TestCity", "TestPassword")
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(1).WillReturnRows(rows)
 	user, err := repo.GetByID(1)
@@ -104,7 +100,7 @@ func Test_mysql_GetByID_ErrNoRows(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := NewRepository(db)
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(1).WillReturnRows(rows)
 	_, err = repo.GetByID(1)
@@ -121,8 +117,8 @@ func Test_mysql_GetByID_EmptyCityData(t *testing.T) {
 		t.Fatal(err)
 	}
 	repo := NewRepository(db)
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, 1, "Мужчина", "TestLogin", nil, nil)
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", nil, nil, "testPasswrod")
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(1).WillReturnRows(rows)
 	res, err := repo.GetByID(1)
@@ -139,8 +135,8 @@ func Test_mysql_GetByLogin(t *testing.T) {
 	repo := NewRepository(db)
 	testLogin := "TestLogin"
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, 1, "Мужчина", testLogin, 1, "TestCity")
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", testLogin, 1, "TestCity", "testPassword")
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testLogin).WillReturnRows(rows)
 
@@ -158,7 +154,7 @@ func Test_mysql_GetByLogin_ErrNoRows(t *testing.T) {
 	repo := NewRepository(db)
 	testLogin := "TestLogin"
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex_id", "sex", "login", "city_id", "city_name"})
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testLogin).WillReturnRows(rows)
 

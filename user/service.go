@@ -7,12 +7,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Service struct {
-	userRepo    repository
-	cityService *city.Serivce
+type repository interface {
+	Create(user *User) (*User, error)
+	List() ([]User, error)
+	GetByID(id int) (*User, error)
+	GetByLogin(login string) (*User, error)
 }
 
-func NewService(repo repository, citySvc *city.Serivce) *Service {
+type Service struct {
+	userRepo    repository
+	cityService *city.Service
+}
+
+func NewService(repo repository, citySvc *city.Service) *Service {
 	return &Service{
 		userRepo:    repo,
 		cityService: citySvc,
@@ -42,6 +49,8 @@ func (s *Service) Create(user *User) (*User, error) {
 
 	user.Password = hash
 
+	fmt.Printf("%+v\n", user)
+
 	updatedUser, err := s.userRepo.Create(user)
 	if err != nil {
 		return nil, err
@@ -59,6 +68,15 @@ func (s *Service) CreatePassword(pass string) (string, error) {
 	return string(hash), nil
 }
 
+func (s *Service) CheckPasswordsEquality(pass string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass))
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
 func (s *Service) CheckUserExist(userLogin string) (bool, error) {
 	user, err := s.userRepo.GetByLogin(userLogin)
 	if err != nil {
@@ -70,4 +88,8 @@ func (s *Service) CheckUserExist(userLogin string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (s *Service) GetUserByLogin(userLogin string) (*User, error) {
+	return s.userRepo.GetByLogin(userLogin)
 }

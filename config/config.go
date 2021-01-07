@@ -6,21 +6,24 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+var SessionName = "hsn-session"
+
 type Config struct {
-	DB     *DBConfig
-	Server *HTTPServerConfig
+	DB        *DBConfig
+	Server    *HTTPServerConfig
+	SecretKey string `envconfig:"SESSION_SECRET_KEY" default:"verysecretkey"`
 }
 
 type DBConfig struct {
-	Host     string `envconfig:"DB_HOST"`
-	Port     int    `envconfig:"DB_PORT"`
-	Login    string `envconfig:"DB_LOGIN"`
-	Password string `envconfig:"DB_PASSWORD"`
-	DBName   string `envconfig:"DB_NAME"`
+	Host     string `envconfig:"DB_HOST" default:"localhost"`
+	Port     int    `envconfig:"DB_PORT" default:"3306"`
+	Login    string `envconfig:"DB_LOGIN" default:"docker"`
+	Password string `envconfig:"DB_PASSWORD" default:"docker"`
+	DBName   string `envconfig:"DB_NAME" default:"hsn"`
 }
 
 func (d *DBConfig) ConnectionString() string {
-	return fmt.Sprintf("mysql://%s:%s@tcp(%s:%d)/%s", d.Login, d.Password, d.Host, d.Port, d.DBName)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", d.Login, d.Password, d.Host, d.Port, d.DBName)
 }
 
 type HTTPServerConfig struct {

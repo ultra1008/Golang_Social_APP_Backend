@@ -24,13 +24,13 @@ func (m *mysql) Create(user *User) (*User, error) {
 	defer cancel()
 
 	res, err := m.db.ExecContext(ctx, query.SQL,
-		sql.Named("first_name", user.FirstName),
-		sql.Named("last_name", user.Lastname),
-		sql.Named("age", user.Age),
-		sql.Named("sex_id", user.Sex.ID),
-		sql.Named("city_id", user.City.ID),
-		sql.Named("password", user.Password),
-		sql.Named("login", user.Login),
+		user.FirstName,
+		user.Lastname,
+		user.Age,
+		user.Sex,
+		user.City.ID,
+		user.Login,
+		user.Password,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating new user: %v", err)
@@ -70,8 +70,7 @@ func (m *mysql) List() ([]User, error) {
 			&u.FirstName,
 			&u.Lastname,
 			&u.Age,
-			&u.Sex.ID,
-			&u.Sex.Name,
+			&u.Sex,
 			&u.Login,
 			&cityID,
 			&cityName,
@@ -108,17 +107,17 @@ func (m *mysql) GetByID(id int) (*User, error) {
 	var cityName sql.NullString
 	var cityID sql.NullInt64
 
-	row := m.db.QueryRowContext(ctx, query.SQL, sql.Named("id", id))
+	row := m.db.QueryRowContext(ctx, query.SQL, id)
 	err := row.Scan(
 		&user.ID,
 		&user.FirstName,
 		&user.Lastname,
 		&user.Age,
-		&user.Sex.ID,
-		&user.Sex.Name,
+		&user.Sex,
 		&user.Login,
 		&cityID,
 		&cityName,
+		&user.Password,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -147,17 +146,17 @@ func (m *mysql) GetByLogin(login string) (*User, error) {
 	var cityName sql.NullString
 	var cityID sql.NullInt64
 
-	row := m.db.QueryRowContext(ctx, query.SQL, sql.Named("login", login))
+	row := m.db.QueryRowContext(ctx, query.SQL, login)
 	err := row.Scan(
 		&user.ID,
 		&user.FirstName,
 		&user.Lastname,
 		&user.Age,
-		&user.Sex.ID,
-		&user.Sex.Name,
+		&user.Sex,
 		&user.Login,
 		&cityID,
 		&cityName,
+		&user.Password,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -1,0 +1,30 @@
+{{define "user_detail"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head"}}
+</head>
+<body>
+    <div class="container">
+        {{template "header" .AuthenticatedUser}}
+        {{template "errors" .Errors}}
+        {{template "messages" .Messages}}
+        <div class="row">
+            <div class="col">
+                <h1>{{ .User.FirstName}} {{ .User.Lastname }}</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <ul>
+                    <li>Город: {{ .User.City.Name }}</li>
+                    <li>Пол: {{ .User.Sex }}</li>
+                    <li>Возраст: {{ .User.Age }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{template "scripts"}}
+</body>
+</html>
+{{end}}

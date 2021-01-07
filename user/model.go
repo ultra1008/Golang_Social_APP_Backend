@@ -9,13 +9,12 @@ type User struct {
 	FirstName string
 	Lastname  string
 	Age       int
-	Sex       Sex
+	Sex       string
 	City      city.City
 	Login     string
 	Password  string
 }
 
-type Sex struct {
-	ID   int
-	Name string
+func (u *User) Sanitize() {
+	u.Password = ""
 }

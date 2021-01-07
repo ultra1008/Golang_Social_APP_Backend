@@ -1,0 +1,64 @@
+{{define "registrate"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head"}}
+</head>
+<body>
+    <div class="container">
+        {{template "header"}}
+        {{template "errors" .Errors}}
+        {{template "messages" .Messages}}
+        <h1>Регистрация</h1>
+        <form method="POST">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Логин</label>
+                        <input type="text" class="form-control" name="inputLogin" aria-describedby="loginHelp" required>
+                        <small id="loginHelp" class="form-text">Длиной более 5 символов.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Пароль</label>
+                        <input type="password" class="form-control" name="inputPassword" aria-describedby="passwordHelp" required>
+                        <small id="passwordHelp" class="form-text">Длиной более 6 символов.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Регистрация</button>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Имя</label>
+                        <input type="text" class="form-control" name="inputName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Фамилия</label>
+                        <input type="text" class="form-control" name="inputLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Возраст</label>
+                        <input type="number" class="form-control" name="inputAge">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Пол</label>
+                        <select class="form-control">
+                        <option value="" disabled selected>Выберите пол</option>
+                        <option value="Мужчина">Мужчина</option>
+                        <option value="Женщина">Женщина</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Город</label>
+                        <input type="text" class="form-control" name="inputCity">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPassword1">Интересы</label>
+                        <input type="text" class="form-control" name="inputInterests">
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    {{template "scripts"}}
+</body>
+</html>
+{{end}}

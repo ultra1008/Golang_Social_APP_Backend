@@ -19,9 +19,8 @@ func init() {
 	queryMap = make(map[int]SQLQuery)
 
 	queryMap[createNewCity] = SQLQuery{
-		SQL: `INSERT INTO citys (` + "`city_name`, " + "`created_by_user`" + `) VALUES (':city_name', 1)
-				ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id);
-				SELECT LAST_INSERT_ID();`,
+		SQL: `INSERT INTO citys (` + "`city_name`, " + "`created_by_user`" + `) VALUES (?, 1)
+				ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id);`,
 		Timeout: 10 * time.Second,
 	}
 

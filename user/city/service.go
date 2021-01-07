@@ -1,15 +1,19 @@
 package city
 
-type Serivce struct {
+type Service struct {
 	repo repository
 }
 
-func NewService(repo repository) *Serivce {
-	return &Serivce{
+func NewService(repo repository) *Service {
+	return &Service{
 		repo: repo,
 	}
 }
 
-func (s *Serivce) Create(city City) (*City, error) {
+func (s *Service) Create(city City) (*City, error) {
 	return s.repo.Create(city.Name)
+}
+
+func (s *Service) List() ([]City, error) {
+	return s.repo.List()
 }

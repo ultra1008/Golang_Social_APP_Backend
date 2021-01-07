@@ -1,10 +1,19 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/gob"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
+
+	"github.com/niklod/highload-social-network/user"
+	"github.com/niklod/highload-social-network/user/city"
 
 	"github.com/niklod/highload-social-network/config"
 	"github.com/niklod/highload-social-network/server"
@@ -15,8 +24,45 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("%#v", cfg.DB.ConnectionString())
+
+	db, err := sql.Open("mysql", cfg.DB.ConnectionString())
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Repositories
+	userRepo := user.NewRepository(db)
+	cityRepo := city.NewRepository(db)
+
+	// Services
+	cityService := city.NewService(cityRepo)
+	userService := user.NewService(userRepo, cityService)
+
+	ss := sessions.NewCookieStore([]byte(cfg.SecretKey))
+	gob.Register(user.User{})
+
+	// Handlers
+	userHandler := user.NewHandler(userService, cityService, ss)
 
 	srv := server.NewHTTPServer(cfg.Server)
+	srv.BaseRouterGroup.Use(userHandler.AuthMiddleware)
+
+	// Регистрациия
+	srv.BaseRouterGroup.GET("/registrate", userHandler.HandleUserRegistrate)
+	srv.BaseRouterGroup.POST("/registrate", userHandler.HandleUserRegistrateSubmit)
+
+	// Вход Выход
+	srv.BaseRouterGroup.GET("/login", userHandler.HandleUserLogin)
+	srv.BaseRouterGroup.POST("/login", userHandler.HandleUserLoginSubmit)
+	srv.BaseRouterGroup.GET("/logout", userHandler.HandleUserLogout)
+
+	// User detail page
+	srv.BaseRouterGroup.GET("/user/:login", userHandler.HandleUserDetail)
+
 	srv.Start()
 
 	sigCh := make(chan os.Signal, 1)

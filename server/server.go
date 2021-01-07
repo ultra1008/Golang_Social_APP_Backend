@@ -18,6 +18,7 @@ type HTTPServer struct {
 
 func NewHTTPServer(cfg *config.HTTPServerConfig) *HTTPServer {
 	engine := gin.Default()
+	engine.LoadHTMLGlob("templates/*")
 	group := engine.Group("/")
 
 	srv := &http.Server{
