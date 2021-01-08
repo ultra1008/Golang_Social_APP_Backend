@@ -12,6 +12,9 @@ type repository interface {
 	List() ([]User, error)
 	GetByID(id int) (*User, error)
 	GetByLogin(login string) (*User, error)
+	AddFriend(userId int, friendId int) error
+	DeleteFriend(userId int, friendId int) error
+	Friends(userId int) ([]User, error)
 }
 
 type Service struct {
@@ -68,7 +71,7 @@ func (s *Service) CreatePassword(pass string) (string, error) {
 	return string(hash), nil
 }
 
-func (s *Service) CheckPasswordsEquality(pass string, hash string) bool {
+func (s *Service) CheckPasswordsEquality(pass, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass))
 	if err != nil {
 		return false
@@ -92,4 +95,25 @@ func (s *Service) CheckUserExist(userLogin string) (bool, error) {
 
 func (s *Service) GetUserByLogin(userLogin string) (*User, error) {
 	return s.userRepo.GetByLogin(userLogin)
+}
+
+func (s *Service) AddFriend(userId, friendId int) error {
+	return s.userRepo.AddFriend(userId, friendId)
+}
+
+func (s *Service) DeleteFriend(userId, friendId int) error {
+	return s.userRepo.DeleteFriend(userId, friendId)
+}
+
+func (s *Service) Friends(userId int) ([]User, error) {
+	return s.userRepo.Friends(userId)
+}
+
+func (s *Service) IsUsersAreFriends(user, userToCheck *User) bool {
+	for _, f := range user.Friends {
+		if userToCheck.ID == f.ID {
+			return true
+		}
+	}
+	return false
 }

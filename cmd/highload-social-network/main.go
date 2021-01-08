@@ -63,6 +63,13 @@ func main() {
 	// User detail page
 	srv.BaseRouterGroup.GET("/user/:login", userHandler.HandleUserDetail)
 
+	// Добавление Удаление из друзей
+	srv.BaseRouterGroup.POST("/user/:login/add_friend", userHandler.HandleAddFriend)
+	srv.BaseRouterGroup.POST("/user/:login/delete_friend", userHandler.HandleDeleteFriend)
+
+	// Static
+	srv.BaseRouterGroup.Static("/public/", "./static")
+
 	srv.Start()
 
 	sigCh := make(chan os.Signal, 1)

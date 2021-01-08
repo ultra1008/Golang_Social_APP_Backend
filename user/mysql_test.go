@@ -163,3 +163,205 @@ func Test_mysql_GetByLogin_ErrNoRows(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, user)
 }
+
+func Test_mysql_AddFriend(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+
+	res := sqlmock.NewResult(1, 1)
+	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+
+	err = repo.AddFriend(testUserId, testFriendId)
+
+	assert.Nil(t, err)
+}
+
+func Test_mysql_AddFriend_zeroLinesAdded(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+	expectedError := fmt.Errorf("test error")
+
+	res := sqlmock.NewResult(0, 0)
+	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+
+	err = repo.AddFriend(testUserId, testFriendId)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, expectedError)
+}
+
+func Test_mysql_AddFriend_DatabaseError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+	expectedError := fmt.Errorf("test error")
+
+	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId).WillReturnError(expectedError)
+
+	err = repo.AddFriend(testUserId, testFriendId)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, expectedError)
+}
+
+func Test_mysql_AddFriend_SameIDs(t *testing.T) {
+	db, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 1
+	expectedError := fmt.Errorf("user ID and friend ID are equal")
+
+	err = repo.AddFriend(testUserId, testFriendId)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, expectedError)
+}
+
+func Test_mysql_DeleteFriend(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+
+	res := sqlmock.NewResult(1, 1)
+	mock.ExpectExec("DELETE FROM friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+
+	err = repo.DeleteFriend(testUserId, testFriendId)
+
+	assert.Nil(t, err)
+}
+
+func Test_mysql_DeleteFriend_zeroLinesAdded(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+	expectedError := fmt.Errorf("test error")
+
+	res := sqlmock.NewResult(0, 0)
+	mock.ExpectExec("DELETE FROM friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+
+	err = repo.DeleteFriend(testUserId, testFriendId)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, expectedError)
+}
+
+func Test_mysql_DeleteFriend_DatabaseError(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := NewRepository(db)
+	testUserId := 1
+	testFriendId := 2
+	expectedError := fmt.Errorf("test error")
+
+	mock.ExpectExec("DELETE FROM friends ").WithArgs(testUserId, testFriendId).WillReturnError(expectedError)
+
+	err = repo.DeleteFriend(testUserId, testFriendId)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, expectedError)
+}
+func Test_mysql_Friends_OneRow(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := NewRepository(db)
+	testUserId := 1
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "testLogin", 1, "TestCity")
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testUserId).WillReturnRows(rows)
+
+	friends, err := repo.Friends(testUserId)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(friends))
+}
+
+func Test_mysql_Friends_TwoRows(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := NewRepository(db)
+	testUserId := 1
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "testLogin", 1, "TestCity")
+	rows.AddRow(2, "TestFirst2", "TestLast2", 16, "Мужчина", "testLogin2", 2, "TestCity2")
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testUserId).WillReturnRows(rows)
+
+	friends, err := repo.Friends(testUserId)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(friends))
+}
+
+func Test_mysql_Friends_ZeroRows(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := NewRepository(db)
+	testUserId := 1
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testUserId).WillReturnRows(rows)
+
+	friends, err := repo.Friends(testUserId)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, friends)
+	assert.Equal(t, 0, len(friends))
+}
+
+func Test_mysql_Friends_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := NewRepository(db)
+	testUserId := 1
+	testError := fmt.Errorf("test error")
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testUserId).WillReturnError(testError)
+
+	friends, err := repo.Friends(testUserId)
+
+	assert.Nil(t, friends)
+	assert.Error(t, err, testError)
+}

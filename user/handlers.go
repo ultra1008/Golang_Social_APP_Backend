@@ -20,9 +20,10 @@ const (
 type ViewData struct {
 	Citys             []city.City
 	Errors            []string
-	Messages          []string
+	Messages          []interface{}
 	User              *User
 	AuthenticatedUser *User
+	UsersAreFriends   bool
 }
 
 type UserHandler struct {
@@ -161,6 +162,13 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 	authUser := getUser(c)
 	userLogin := c.Param("login")
 
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("user detail, getting session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
 	user, err := u.userService.GetUserByLogin(userLogin)
 	if err != nil {
 		log.Printf("user detail, getting user: %v", err)
@@ -172,9 +180,120 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 		return
 	}
 
+	userFriends, err := u.userService.Friends(user.ID)
+	if err != nil {
+		log.Printf("user detail, getting friends: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	user.Friends = userFriends
 	user.Sanitize()
 
-	c.HTML(http.StatusOK, "user_detail", ViewData{User: user, AuthenticatedUser: authUser})
+	authUserFriends, err := u.userService.Friends(authUser.ID)
+	if err != nil {
+		log.Printf("user detail, getting friends: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	authUser.Friends = authUserFriends
+
+	data := ViewData{
+		Messages:          session.Flashes(),
+		User:              user,
+		AuthenticatedUser: authUser,
+		UsersAreFriends:   u.userService.IsUsersAreFriends(authUser, user),
+	}
+
+	err = session.Save(c.Request, c.Writer)
+	if err != nil {
+		log.Printf("save session with flashes: %v", err)
+	}
+
+	c.HTML(http.StatusOK, "user_detail", data)
+}
+
+func (u *UserHandler) HandleAddFriend(c *gin.Context) {
+	authUser := getUser(c)
+	userLogin := c.Param("login")
+
+	if authUser == nil {
+		c.HTML(http.StatusUnauthorized, "login", nil)
+		return
+	}
+
+	user, err := u.userService.GetUserByLogin(userLogin)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	err = u.userService.AddFriend(authUser.ID, user.ID)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	msg := fmt.Sprintf("Пользователь %s %s успешно добавлен в друзья", user.FirstName, user.Lastname)
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("get session user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	session.AddFlash(msg)
+	err = session.Save(c.Request, c.Writer)
+	if err != nil {
+		log.Printf("save session with flashes: %v", err)
+	}
+
+	redirectLocation := fmt.Sprintf("/user/%s", user.Login)
+
+	c.Redirect(http.StatusMovedPermanently, redirectLocation)
+}
+
+func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
+	authUser := getUser(c)
+	userLogin := c.Param("login")
+
+	if authUser == nil {
+		c.HTML(http.StatusUnauthorized, "login", nil)
+		return
+	}
+
+	user, err := u.userService.GetUserByLogin(userLogin)
+	if err != nil {
+		log.Printf("get user by login in handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	err = u.userService.DeleteFriend(authUser.ID, user.ID)
+	if err != nil {
+		log.Printf("delete friend in handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	msg := fmt.Sprintf("Пользователь %s %s успешно удален из друзей", user.FirstName, user.Lastname)
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("get session user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	session.AddFlash(msg)
+
+	err = session.Save(c.Request, c.Writer)
+	if err != nil {
+		log.Printf("save session with flashes: %v", err)
+	}
+
+	redirectLocation := fmt.Sprintf("/user/%s", user.Login)
+
+	c.Redirect(http.StatusMovedPermanently, redirectLocation)
 }
 
 func (u *UserHandler) AuthMiddleware(c *gin.Context) {

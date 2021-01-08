@@ -13,6 +13,7 @@ type User struct {
 	City      city.City
 	Login     string
 	Password  string
+	Friends   []User
 }
 
 func (u *User) Sanitize() {

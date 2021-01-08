@@ -1,0 +1,1 @@
+ALTER TABLE friends ADD UNIQUE unique_index (user_id, friend_id);

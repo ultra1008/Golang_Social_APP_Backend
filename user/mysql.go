@@ -58,7 +58,7 @@ func (m *mysql) List() ([]User, error) {
 	}
 	defer rows.Close()
 
-	var users []User
+	users := []User{}
 
 	for rows.Next() {
 		var u User
@@ -173,4 +173,101 @@ func (m *mysql) GetByLogin(login string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func (m *mysql) AddFriend(userId int, friendId int) error {
+	query := queryMap[addFriend]
+	ctx, cancel := context.WithTimeout(context.Background(), query.Timeout)
+	defer cancel()
+
+	if userId == friendId {
+		return fmt.Errorf("user ID and friend ID are equal")
+	}
+
+	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId)
+	if err != nil {
+		return fmt.Errorf("adding friend with ID %d to user ID %d: %v", friendId, userId, err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("getting afected rows: %v", err)
+	}
+
+	if int(rowsAffected) == 0 {
+		return fmt.Errorf("affected rows equal 0: %v", err)
+	}
+
+	return nil
+}
+
+func (m *mysql) DeleteFriend(userId int, friendId int) error {
+	query := queryMap[deleteFriend]
+	ctx, cancel := context.WithTimeout(context.Background(), query.Timeout)
+	defer cancel()
+
+	if userId == friendId {
+		return fmt.Errorf("user ID and friend ID are equal")
+	}
+
+	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId)
+	if err != nil {
+		return fmt.Errorf("deleting friend with ID %d from user ID %d: %v", friendId, userId, err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("getting afected rows: %v", err)
+	}
+
+	if int(rowsAffected) == 0 {
+		return fmt.Errorf("affected rows equal 0: %v", err)
+	}
+
+	return nil
+}
+
+func (m *mysql) Friends(userId int) ([]User, error) {
+	query := queryMap[getFriends]
+	ctx, cancel := context.WithTimeout(context.Background(), query.Timeout)
+	defer cancel()
+
+	rows, err := m.db.QueryContext(ctx, query.SQL, userId)
+	if err != nil {
+		return nil, fmt.Errorf("getting friends: %v", err)
+	}
+
+	friends := []User{}
+
+	for rows.Next() {
+		var friend User
+		var cityID sql.NullInt64
+		var cityName sql.NullString
+
+		err := rows.Scan(
+			&friend.ID,
+			&friend.FirstName,
+			&friend.Lastname,
+			&friend.Age,
+			&friend.Sex,
+			&friend.Login,
+			&cityID,
+			&cityName,
+		)
+		if err != nil {
+			log.Printf("scanning friends: %v", err)
+			continue
+		}
+
+		friend.City = city.City{}
+
+		if cityName.Valid && cityID.Valid {
+			friend.City.Name = cityName.String
+			friend.City.ID = int(cityID.Int64)
+		}
+
+		friends = append(friends, friend)
+	}
+
+	return friends, nil
 }
