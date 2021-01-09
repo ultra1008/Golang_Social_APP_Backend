@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/niklod/highload-social-network/config"
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,22 +22,30 @@ type ViewData struct {
 	Citys             []city.City
 	Errors            []string
 	Messages          []interface{}
+	Interests         []interest.Interest
 	User              *User
 	AuthenticatedUser *User
 	UsersAreFriends   bool
 }
 
 type UserHandler struct {
-	userService  *Service
-	cityService  *city.Service
-	sessionStore *sessions.CookieStore
+	userService     *Service
+	cityService     *city.Service
+	interestService *interest.Service
+	sessionStore    *sessions.CookieStore
 }
 
-func NewHandler(userService *Service, cityService *city.Service, ss *sessions.CookieStore) *UserHandler {
+func NewHandler(
+	userService *Service,
+	cityService *city.Service,
+	sessionStore *sessions.CookieStore,
+	interestService *interest.Service,
+) *UserHandler {
 	return &UserHandler{
-		userService:  userService,
-		cityService:  cityService,
-		sessionStore: ss,
+		userService:     userService,
+		cityService:     cityService,
+		sessionStore:    sessionStore,
+		interestService: interestService,
 	}
 }
 
@@ -45,11 +54,41 @@ func (u *UserHandler) HandleUserRegistrate(c *gin.Context) {
 	if user != nil {
 		c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/user/%s", user.Login))
 	}
-	c.HTML(http.StatusOK, "registrate", nil)
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("get session user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	messages := session.Flashes()
+
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		log.Printf("saving session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	interests, err := u.interestService.Interests()
+	if err != nil {
+		log.Printf("gettings interests on registration page: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	c.HTML(http.StatusOK, "registrate", ViewData{Interests: interests, Messages: messages})
 }
 
 func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 	var errors []string
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("get session user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	req := &UserCreateRequest{}
 	if err := c.ShouldBind(&req); err != nil {
@@ -58,6 +97,9 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 		return
 	}
 
+	c.Request.ParseForm()
+	req.Interests = c.Request.Form["inputInterests"]
+
 	if err := req.Validate(); err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
 			errors = append(errors, fieldError{err: e}.String())
@@ -65,13 +107,31 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 	}
 
 	if len(errors) > 0 {
-		c.HTML(http.StatusOK, "registrate", ViewData{Errors: errors})
+		for _, e := range errors {
+			session.AddFlash(e)
+		}
+
+		if err := session.Save(c.Request, c.Writer); err != nil {
+			log.Printf("saving session: %v", err)
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+
+		c.Redirect(http.StatusMovedPermanently, "/registrate")
 		return
 	}
 
-	_, err := u.userService.Create(req.ConverIntoUser())
+	_, err = u.userService.Create(req.ConverIntoUser())
 	if err != nil {
 		fmt.Printf("user creation: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	session.AddFlash("Регистрация успешно пройдена")
+
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		log.Printf("saving session: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -87,7 +147,6 @@ func (u *UserHandler) HandleUserLogout(c *gin.Context) {
 		return
 	}
 
-	session.Values[userSessionKey] = User{}
 	session.Options.MaxAge = -1
 
 	if err := session.Save(c.Request, c.Writer); err != nil {
@@ -101,10 +160,26 @@ func (u *UserHandler) HandleUserLogout(c *gin.Context) {
 
 func (u *UserHandler) HandleUserLogin(c *gin.Context) {
 	user := getUser(c)
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("user detail, getting session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	messages := session.Flashes()
+
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		log.Printf("user detail, saving session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
 	if user != nil {
 		c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/user/%s", user.Login))
 	}
-	c.HTML(http.StatusOK, "login", nil)
+	c.HTML(http.StatusOK, "login", ViewData{Messages: messages})
 }
 
 func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
@@ -187,15 +262,26 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 		return
 	}
 	user.Friends = userFriends
-	user.Sanitize()
 
-	authUserFriends, err := u.userService.Friends(authUser.ID)
+	userInterests, err := u.interestService.InterestsByUserId(user.ID)
 	if err != nil {
-		log.Printf("user detail, getting friends: %v", err)
+		log.Printf("user detail, getting interests: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	authUser.Friends = authUserFriends
+	user.Interests = userInterests
+
+	user.Sanitize()
+
+	if authUser != nil {
+		authUserFriends, err := u.userService.Friends(authUser.ID)
+		if err != nil {
+			log.Printf("user detail, getting friends: %v", err)
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		authUser.Friends = authUserFriends
+	}
 
 	data := ViewData{
 		Messages:          session.Flashes(),
@@ -296,6 +382,26 @@ func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, redirectLocation)
 }
 
+func (u *UserHandler) HandleInterestsSuggestions(c *gin.Context) {
+	suggestions, err := u.interestService.Interests()
+	if err != nil {
+		log.Printf("gettings interest suggestions: %v", err)
+		return
+	}
+
+	res := []string{}
+
+	if suggestions == nil {
+		return
+	}
+
+	for _, s := range suggestions {
+		res = append(res, s.Name)
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 func (u *UserHandler) AuthMiddleware(c *gin.Context) {
 	session, err := u.sessionStore.Get(c.Request, config.SessionName)
 	if err != nil {
@@ -304,16 +410,20 @@ func (u *UserHandler) AuthMiddleware(c *gin.Context) {
 	}
 
 	user, exist := session.Values[userSessionKey]
-	if exist {
+	if exist && session.Options.MaxAge > 0 {
 		c.Set(userSessionKey, user)
 	}
 }
 
 func getUser(c *gin.Context) *User {
-	val, _ := c.Get(userSessionKey)
+	val, ok := c.Get(userSessionKey)
+	if !ok {
+		return nil
+	}
+
 	var user = User{}
 
-	user, ok := val.(User)
+	user, ok = val.(User)
 	if !ok {
 		return nil
 	}

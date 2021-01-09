@@ -17,8 +17,8 @@
         <div class="row">
             <div class="col-md-3">
                 <img src="/public/chucknorris.jpg" alt="..." class="img-thumbnail">
-
-                {{ if (eq .AuthenticatedUser.ID .User.ID) }}
+                {{if not .AuthenticatedUser}}
+                {{else if (eq .AuthenticatedUser.ID .User.ID) }}
                 {{else if .UsersAreFriends}}
                     <form method="post" action="/user/{{.User.Login}}/delete_friend">
                     <button type="submit" class="btn btn-danger">Удалить из друзей</button>
@@ -30,11 +30,24 @@
                 {{end}}
             </div>
             <div class="col-md-9">
-                <ul>
-                    <li>Город: {{ .User.City.Name }}</li>
-                    <li>Пол: {{ .User.Sex }}</li>
-                    <li>Возраст: {{ .User.Age }}</li>
-                </ul>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>Информация:</h3>
+                        <ul>
+                            <li>Город: {{ .User.City.Name }}</li>
+                            <li>Пол: {{ .User.Sex }}</li>
+                            <li>Возраст: {{ .User.Age }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <h3>Интересы:</h3>
+                        {{range .User.Interests}}
+                        <span class="badge bg-secondary">{{.Name}}</span>
+                        {{end}}
+                    </div>
+                </div>
             </div>
         </div>
         {{if .User.Friends}}

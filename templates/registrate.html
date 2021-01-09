@@ -52,13 +52,29 @@
                     </div>
                     <div class="form-group">
                         <label for="exampleInputPassword1">Интересы</label>
-                        <input type="text" class="form-control" name="inputInterests">
+                        <select name="inputInterests" class="form-select" id="choices-multiple-remove-button" multiple>
+                            {{range .Interests}}
+                            <option value="{{.Name}}">{{.Name}}</option>
+                            {{end}}
+                        </select>
                     </div>
                 </div>
             </div>
         </form>
     </div>
     {{template "scripts"}}
+    <script>
+        $(document).ready(function(){
+
+        var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+        removeItemButton: true,
+        maxItemCount:5,
+        searchResultLimit:5,
+        renderChoiceLimit:5
+        });
+
+        });
+    </script>
 </body>
 </html>
 {{end}}

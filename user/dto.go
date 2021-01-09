@@ -5,17 +5,18 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 )
 
 type UserCreateRequest struct {
-	Login     string `form:"inputLogin" validate:"required,min=5,max=20"`
-	Password  string `form:"inputPassword" validate:"required,min=6,max=40"`
-	FirstName string `form:"inputName" validate:"required,max=50"`
-	LastName  string `form:"inputLastName" validate:"required,max=50"`
-	Age       int    `form:"inputAge" validate:"gte=0,lte=120"`
-	Sex       string `form:"inputSex" validate:""`
-	City      string `form:"inputCity" validate:""`
-	Interests string `form:"inputInterests" validate:""`
+	Login     string   `form:"inputLogin" validate:"required,min=5,max=20"`
+	Password  string   `form:"inputPassword" validate:"required,min=6,max=40"`
+	FirstName string   `form:"inputName" validate:"required,max=50"`
+	LastName  string   `form:"inputLastName" validate:"required,max=50"`
+	Age       int      `form:"inputAge" validate:"gte=0,lte=120"`
+	Sex       string   `form:"inputSex" validate:""`
+	City      string   `form:"inputCity" validate:""`
+	Interests []string `form:"inputInterests[]" validate:""`
 }
 
 func (u *UserCreateRequest) Validate() error {
@@ -24,6 +25,12 @@ func (u *UserCreateRequest) Validate() error {
 }
 
 func (u *UserCreateRequest) ConverIntoUser() *User {
+	interests := []interest.Interest{}
+
+	for _, name := range u.Interests {
+		interests = append(interests, interest.Interest{Name: name})
+	}
+
 	return &User{
 		FirstName: u.FirstName,
 		Lastname:  u.LastName,
@@ -32,6 +39,7 @@ func (u *UserCreateRequest) ConverIntoUser() *User {
 		City:      city.City{Name: u.City},
 		Login:     u.Login,
 		Password:  u.Password,
+		Interests: interests,
 	}
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE user_interests ADD UNIQUE unique_index (user_id, interest_id);

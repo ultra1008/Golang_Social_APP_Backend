@@ -14,6 +14,7 @@ import (
 
 	"github.com/niklod/highload-social-network/user"
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 
 	"github.com/niklod/highload-social-network/config"
 	"github.com/niklod/highload-social-network/server"
@@ -37,16 +38,18 @@ func main() {
 	// Repositories
 	userRepo := user.NewRepository(db)
 	cityRepo := city.NewRepository(db)
+	interestRepo := interest.NewRepository(db)
 
 	// Services
 	cityService := city.NewService(cityRepo)
-	userService := user.NewService(userRepo, cityService)
+	interestService := interest.NewService(interestRepo)
+	userService := user.NewService(userRepo, cityService, interestService)
 
 	ss := sessions.NewCookieStore([]byte(cfg.SecretKey))
 	gob.Register(user.User{})
 
 	// Handlers
-	userHandler := user.NewHandler(userService, cityService, ss)
+	userHandler := user.NewHandler(userService, cityService, ss, interestService)
 
 	srv := server.NewHTTPServer(cfg.Server)
 	srv.BaseRouterGroup.Use(userHandler.AuthMiddleware)
@@ -69,6 +72,9 @@ func main() {
 
 	// Static
 	srv.BaseRouterGroup.Static("/public/", "./static")
+
+	// Подсказки интересов
+	srv.BaseRouterGroup.GET("/interests_suggestions", userHandler.HandleInterestsSuggestions)
 
 	srv.Start()
 

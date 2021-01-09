@@ -2,8 +2,10 @@ package user
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,14 +20,16 @@ type repository interface {
 }
 
 type Service struct {
-	userRepo    repository
-	cityService *city.Service
+	userRepo        repository
+	cityService     *city.Service
+	interestService *interest.Service
 }
 
-func NewService(repo repository, citySvc *city.Service) *Service {
+func NewService(repo repository, citySvc *city.Service, interestSvc *interest.Service) *Service {
 	return &Service{
-		userRepo:    repo,
-		cityService: citySvc,
+		userRepo:        repo,
+		cityService:     citySvc,
+		interestService: interestSvc,
 	}
 }
 
@@ -45,6 +49,8 @@ func (s *Service) Create(user *User) (*User, error) {
 
 	user.City = *city
 
+	fmt.Printf("%+v", user.Interests)
+
 	hash, err := s.CreatePassword(user.Password)
 	if err != nil {
 		return nil, fmt.Errorf("generating hash from password: %v", err)
@@ -52,12 +58,26 @@ func (s *Service) Create(user *User) (*User, error) {
 
 	user.Password = hash
 
-	fmt.Printf("%+v\n", user)
-
 	updatedUser, err := s.userRepo.Create(user)
 	if err != nil {
 		return nil, err
 	}
+
+	for _, i := range user.Interests {
+		err := s.interestService.Create(&i)
+		if err != nil {
+			log.Printf("creating user interest %v", err)
+			continue
+		}
+
+		err = s.interestService.AddInterestToUser(updatedUser.ID, i.ID)
+		if err != nil {
+			log.Printf("addint interest to user %v", err)
+			continue
+		}
+	}
+
+	fmt.Printf("%+v", updatedUser)
 
 	return updatedUser, nil
 }
@@ -110,10 +130,22 @@ func (s *Service) Friends(userId int) ([]User, error) {
 }
 
 func (s *Service) IsUsersAreFriends(user, userToCheck *User) bool {
+	if user == nil {
+		return false
+	}
+
 	for _, f := range user.Friends {
 		if userToCheck.ID == f.ID {
 			return true
 		}
 	}
 	return false
+}
+
+func (s *Service) Interests(userId int) ([]interest.Interest, error) {
+	return s.interestService.Interests()
+}
+
+func (s *Service) AddInterest(userId, interestId int) error {
+	return s.interestService.AddInterestToUser(userId, interestId)
 }

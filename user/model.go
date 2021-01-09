@@ -2,6 +2,7 @@ package user
 
 import (
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 )
 
 type User struct {
@@ -14,6 +15,7 @@ type User struct {
 	Login     string
 	Password  string
 	Friends   []User
+	Interests []interest.Interest
 }
 
 func (u *User) Sanitize() {
