@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
@@ -25,13 +26,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%#v", cfg.DB.ConnectionString())
 
-	db, err := sql.Open("mysql", cfg.DB.ConnectionString())
+	db, err := dbConnect("mysql", cfg.DB.ConnectionString())
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err := db.Ping(); err != nil {
 		log.Fatal(err)
 	}
 
@@ -86,4 +83,31 @@ func main() {
 	srv.Shutdown()
 	signal.Stop(sigCh)
 	log.Println("program stopped")
+}
+
+func dbConnect(driver, connectionString string) (*sql.DB, error) {
+	var connErr error
+
+	for i := 1; i <= 5; i++ {
+		fmt.Printf("trying to connect to DB, try %d\n", i)
+
+		if i != 1 {
+			time.Sleep(5 * time.Second)
+		}
+
+		db, err := sql.Open(driver, connectionString)
+		if err != nil {
+			connErr = err
+			continue
+		}
+
+		if err := db.Ping(); err != nil {
+			connErr = err
+			continue
+		}
+
+		return db, connErr
+	}
+
+	return nil, connErr
 }
