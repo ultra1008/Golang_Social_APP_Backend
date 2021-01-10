@@ -70,11 +70,11 @@ func main() {
 	srv.BaseRouterGroup.POST("/user/:login/add_friend", userHandler.HandleAddFriend)
 	srv.BaseRouterGroup.POST("/user/:login/delete_friend", userHandler.HandleDeleteFriend)
 
+	// Список пользователей
+	srv.BaseRouterGroup.GET("/users", userHandler.HandleUsersList)
+
 	// Static
 	srv.BaseRouterGroup.Static("/public/", "./static")
-
-	// Подсказки интересов
-	srv.BaseRouterGroup.GET("/interests_suggestions", userHandler.HandleInterestsSuggestions)
 
 	srv.Start()
 

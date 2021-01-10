@@ -82,6 +82,10 @@ func (s *Service) Create(user *User) (*User, error) {
 	return updatedUser, nil
 }
 
+func (s *Service) Users() ([]User, error) {
+	return s.userRepo.List()
+}
+
 func (s *Service) CreatePassword(pass string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
 	if err != nil {

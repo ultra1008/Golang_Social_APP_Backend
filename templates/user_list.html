@@ -1,0 +1,23 @@
+{{define "user_list"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head"}}
+</head>
+<body>
+    <div class="container">
+        {{template "header" .AuthenticatedUser}}
+        <h1>Пользователи</h1>
+        {{range .Users}}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{.FirstName}}{{.Lastname}}</h5>
+                <a href="/user/{{.Login}}" class="btn btn-primary">Перейти в профиль</a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{template "scripts"}}
+</body>
+</html>
+{{end}}

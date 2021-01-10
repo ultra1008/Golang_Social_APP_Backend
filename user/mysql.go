@@ -47,7 +47,7 @@ func (m *mysql) Create(user *User) (*User, error) {
 }
 
 func (m *mysql) List() ([]User, error) {
-	query := queryMap[createQuery]
+	query := queryMap[listQuery]
 
 	ctx, cancel := context.WithTimeout(context.Background(), query.Timeout)
 	defer cancel()

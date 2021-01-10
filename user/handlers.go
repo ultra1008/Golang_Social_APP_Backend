@@ -20,7 +20,7 @@ const (
 
 type ViewData struct {
 	Citys             []city.City
-	Errors            []string
+	Errors            []interface{}
 	Messages          []interface{}
 	Interests         []interest.Interest
 	User              *User
@@ -77,11 +77,11 @@ func (u *UserHandler) HandleUserRegistrate(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "registrate", ViewData{Interests: interests, Messages: messages})
+	c.HTML(http.StatusOK, "registrate", ViewData{Interests: interests, Errors: messages})
 }
 
 func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
-	var errors []string
+	var errors []interface{}
 
 	session, err := u.sessionStore.Get(c.Request, config.SessionName)
 	if err != nil {
@@ -184,7 +184,7 @@ func (u *UserHandler) HandleUserLogin(c *gin.Context) {
 
 func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 	var req UserLoginRequest
-	var errors []string
+	var errors []interface{}
 
 	if err := c.ShouldBind(&req); err != nil {
 		errors = append(errors, err.Error())
@@ -382,24 +382,20 @@ func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, redirectLocation)
 }
 
-func (u *UserHandler) HandleInterestsSuggestions(c *gin.Context) {
-	suggestions, err := u.interestService.Interests()
+func (u *UserHandler) HandleUsersList(c *gin.Context) {
+	authUser := getUser(c)
+
+	users, err := u.userService.Users()
 	if err != nil {
-		log.Printf("gettings interest suggestions: %v", err)
+		log.Printf("gettings user list in handler: %v", err)
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	res := []string{}
-
-	if suggestions == nil {
-		return
-	}
-
-	for _, s := range suggestions {
-		res = append(res, s.Name)
-	}
-
-	c.JSON(http.StatusOK, res)
+	c.HTML(http.StatusOK, "user_list", struct {
+		Users             []User
+		AuthenticatedUser *User
+	}{users, authUser})
 }
 
 func (u *UserHandler) AuthMiddleware(c *gin.Context) {

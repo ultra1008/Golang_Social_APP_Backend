@@ -6,12 +6,14 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/user/interest"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestService_Create(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	cityDb, cityMock, _ := sqlmock.New()
+	interestDb, _, _ := sqlmock.New()
 
 	testUser := &User{
 		ID:        1,
@@ -28,11 +30,15 @@ func TestService_Create(t *testing.T) {
 	}
 
 	repo := NewRepository(db)
-	cityRepo := city.NewRepository(cityDb)
-	citySvc := city.NewService(cityRepo)
-	userSvc := NewService(repo, citySvc)
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	cityRepo := city.NewRepository(cityDb)
+	interestRepo := interest.NewRepository(interestDb)
+
+	citySvc := city.NewService(cityRepo)
+	interestSvc := interest.NewService(interestRepo)
+	userSvc := NewService(repo, citySvc, interestSvc)
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
 	cityRows := sqlmock.NewRows([]string{"id"}).AddRow(testUser.City.ID)
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testUser.Login).WillReturnRows(rows)
@@ -67,12 +73,14 @@ func TestService_Create_UserAlreadyExist(t *testing.T) {
 
 	repo := NewRepository(db)
 	cityRepo := city.NewRepository(db)
+	interestRepo := interest.NewRepository(db)
 	citySvc := city.NewService(cityRepo)
-	userSvc := NewService(repo, citySvc)
+	interestSvc := interest.NewService(interestRepo)
+	userSvc := NewService(repo, citySvc, interestSvc)
 	expectedErrorString := "user already exist"
 
-	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
-	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", testUser.Login, 1, "TestCity")
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", testUser.Login, 1, "TestCity", "testpassword")
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testUser.Login).WillReturnRows(rows)
 
