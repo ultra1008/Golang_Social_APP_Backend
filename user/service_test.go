@@ -13,7 +13,6 @@ import (
 func TestService_Create(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	cityDb, cityMock, _ := sqlmock.New()
-	interestDb, _, _ := sqlmock.New()
 
 	testUser := &User{
 		ID:        1,
@@ -32,18 +31,17 @@ func TestService_Create(t *testing.T) {
 	repo := NewRepository(db)
 
 	cityRepo := city.NewRepository(cityDb)
-	interestRepo := interest.NewRepository(interestDb)
+	interestRepo := interest.NewRepository(db)
 
 	citySvc := city.NewService(cityRepo)
 	interestSvc := interest.NewService(interestRepo)
 	userSvc := NewService(repo, citySvc, interestSvc)
 
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name", "password"})
-	cityRows := sqlmock.NewRows([]string{"id"}).AddRow(testUser.City.ID)
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testUser.Login).WillReturnRows(rows)
 	mock.ExpectExec("INSERT INTO users").WillReturnResult(sqlmock.NewResult(int64(testUser.ID), 1))
-	cityMock.ExpectQuery("INSERT INTO citys").WillReturnRows(cityRows)
+	cityMock.ExpectExec("INSERT INTO citys").WithArgs(testUser.City.Name).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	u, err := userSvc.Create(testUser)
 

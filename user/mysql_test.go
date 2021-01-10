@@ -71,7 +71,7 @@ func Test_mysql_List(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
 	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", 1, "TestCity")
 
-	mock.ExpectQuery("INSERT INTO users").WillReturnRows(rows)
+	mock.ExpectQuery("ELECT u.id").WillReturnRows(rows)
 	users, err := repo.List()
 
 	assert.NoError(t, err)
