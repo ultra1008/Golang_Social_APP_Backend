@@ -5,11 +5,13 @@ import (
 	"encoding/gob"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 
@@ -50,6 +52,11 @@ func main() {
 
 	srv := server.NewHTTPServer(cfg.Server)
 	srv.BaseRouterGroup.Use(userHandler.AuthMiddleware)
+
+	// Главная
+	srv.BaseRouterGroup.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/login")
+	})
 
 	// Регистрациия
 	srv.BaseRouterGroup.GET("/registrate", userHandler.HandleUserRegistrate)
