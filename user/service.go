@@ -97,11 +97,7 @@ func (s *Service) CreatePassword(pass string) (string, error) {
 
 func (s *Service) CheckPasswordsEquality(pass, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass))
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (s *Service) CheckUserExist(userLogin string) (bool, error) {

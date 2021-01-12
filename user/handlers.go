@@ -97,7 +97,12 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 		return
 	}
 
-	c.Request.ParseForm()
+	if err := c.Request.ParseForm(); err != nil {
+		log.Printf("parse form user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
 	req.Interests = c.Request.Form["inputInterests"]
 
 	if err := req.Validate(); err != nil {
