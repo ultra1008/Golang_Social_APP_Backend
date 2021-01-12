@@ -46,6 +46,7 @@ func (m *mysql) List() ([]Interest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get interests list: %v", err)
 	}
+	defer rows.Close()
 
 	interests := []Interest{}
 
@@ -73,6 +74,7 @@ func (m *mysql) InterestsByUserId(id int) ([]Interest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get interests list by user id: %v", err)
 	}
+	defer rows.Close()
 
 	interests := []Interest{}
 

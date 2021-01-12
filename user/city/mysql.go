@@ -47,6 +47,7 @@ func (m *mysql) List() ([]City, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting citys list: %v", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var city City

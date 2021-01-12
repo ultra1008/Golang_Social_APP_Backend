@@ -236,6 +236,7 @@ func (m *mysql) Friends(userId int) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting friends: %v", err)
 	}
+	defer rows.Close()
 
 	friends := []User{}
 
