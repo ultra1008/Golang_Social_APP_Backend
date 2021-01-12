@@ -17,9 +17,9 @@ type Config struct {
 type DBConfig struct {
 	Host     string `envconfig:"DB_HOST" default:"localhost"`
 	Port     int    `envconfig:"DB_PORT" default:"3306"`
-	Login    string `envconfig:"DB_LOGIN" default:""`
-	Password string `envconfig:"DB_PASSWORD" default:""`
-	DBName   string `envconfig:"DB_NAME" default:""`
+	Login    string `envconfig:"DB_LOGIN" default:"docker"`
+	Password string `envconfig:"DB_PASSWORD" default:"docker"`
+	DBName   string `envconfig:"DB_NAME" default:"hsn"`
 }
 
 func (d *DBConfig) ConnectionString() string {
