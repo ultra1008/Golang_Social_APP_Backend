@@ -5,10 +5,10 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
-      MYSQL_DATABASE: hsn
-      MYSQL_USER: docker
-      MYSQL_PASSWORD: docker
-      MYSQL_ROOT_PASSWORD: docker
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -27,11 +27,12 @@ services:
     depends_on:
       - db
     environment:
+      DB_LOGIN: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
       DB_HOST: db
       DB_PORT: 3306
-      DB_LOGIN: docker
-      DB_PASSWORD: docker
-      DB_NAME: hsn
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY}
     networks:
       - backend
 volumes:
