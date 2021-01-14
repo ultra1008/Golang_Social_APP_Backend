@@ -55,7 +55,7 @@ func main() {
 
 	// Главная
 	srv.BaseRouterGroup.GET("/", func(c *gin.Context) {
-		c.Redirect(http.StatusMovedPermanently, "/login")
+		c.Redirect(http.StatusSeeOther, "/login")
 	})
 
 	// Регистрациия

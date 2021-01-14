@@ -52,7 +52,8 @@ func NewHandler(
 func (u *UserHandler) HandleUserRegistrate(c *gin.Context) {
 	user := getUser(c)
 	if user != nil {
-		c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/user/%s", user.Login))
+		c.Redirect(http.StatusFound, fmt.Sprintf("/user/%s", user.Login))
+		return
 	}
 
 	session, err := u.sessionStore.Get(c.Request, config.SessionName)
@@ -122,7 +123,7 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 			return
 		}
 
-		c.Redirect(http.StatusMovedPermanently, "/registrate")
+		c.Redirect(http.StatusSeeOther, "/registrate")
 		return
 	}
 
@@ -141,7 +142,7 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusMovedPermanently, "/login")
+	c.Redirect(http.StatusFound, "/login")
 }
 
 func (u *UserHandler) HandleUserLogout(c *gin.Context) {
@@ -160,7 +161,7 @@ func (u *UserHandler) HandleUserLogout(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "login", nil)
+	c.Redirect(http.StatusFound, "login")
 }
 
 func (u *UserHandler) HandleUserLogin(c *gin.Context) {
@@ -182,7 +183,8 @@ func (u *UserHandler) HandleUserLogin(c *gin.Context) {
 	}
 
 	if user != nil {
-		c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/user/%s", user.Login))
+		c.Redirect(http.StatusFound, fmt.Sprintf("/user/%s", user.Login))
+		return
 	}
 	c.HTML(http.StatusOK, "login", ViewData{Messages: messages})
 }
@@ -193,7 +195,7 @@ func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 
 	if err := c.ShouldBind(&req); err != nil {
 		errors = append(errors, err.Error())
-		c.HTML(http.StatusOK, "login", ViewData{Errors: errors})
+		c.HTML(http.StatusBadRequest, "login", ViewData{Errors: errors})
 		return
 	}
 
@@ -204,7 +206,7 @@ func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 	}
 
 	if len(errors) > 0 {
-		c.HTML(http.StatusOK, "login", ViewData{Errors: errors})
+		c.HTML(http.StatusUnprocessableEntity, "login", ViewData{Errors: errors})
 		return
 	}
 
@@ -217,7 +219,7 @@ func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 
 	if user == nil || !u.userService.CheckPasswordsEquality(req.Password, user.Password) {
 		errors = append(errors, "Указан неверный логин или пароль")
-		c.HTML(http.StatusOK, "login", ViewData{Errors: errors})
+		c.HTML(http.StatusForbidden, "login", ViewData{Errors: errors})
 		return
 	}
 
@@ -235,7 +237,7 @@ func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/user/%s", user.Login))
+	c.Redirect(http.StatusFound, fmt.Sprintf("/user/%s", user.Login))
 }
 
 func (u *UserHandler) HandleUserDetail(c *gin.Context) {
@@ -340,7 +342,7 @@ func (u *UserHandler) HandleAddFriend(c *gin.Context) {
 
 	redirectLocation := fmt.Sprintf("/user/%s", user.Login)
 
-	c.Redirect(http.StatusMovedPermanently, redirectLocation)
+	c.Redirect(http.StatusSeeOther, redirectLocation)
 }
 
 func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
@@ -384,7 +386,7 @@ func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
 
 	redirectLocation := fmt.Sprintf("/user/%s", user.Login)
 
-	c.Redirect(http.StatusMovedPermanently, redirectLocation)
+	c.Redirect(http.StatusSeeOther, redirectLocation)
 }
 
 func (u *UserHandler) HandleUsersList(c *gin.Context) {
