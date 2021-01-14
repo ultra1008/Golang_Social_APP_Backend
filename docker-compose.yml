@@ -15,26 +15,26 @@ services:
       - mysql:/var/lib/mysql
     networks:
       - backend
-app:
-  build:
-    context: .
-    dockerfile: Dockerfile
-  ports:
-    - "8080:8080"
-  expose:
-    - "8080"
-  restart: unless-stopped
-  depends_on:
-    - db
-  environment:
-    DB_LOGIN: ${MYSQL_USER}
-    DB_PASSWORD: ${MYSQL_PASSWORD}
-    DB_NAME: ${MYSQL_DATABASE}
-    DB_HOST: db
-    DB_PORT: 3306
-    SESSION_SECRET_KEY: ${SESSION_SECRET_KEY}
-  networks:
-    - backend
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_LOGIN: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_HOST: db
+      DB_PORT: 3306
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY}
+    networks:
+      - backend
 volumes:
   mysql: {}
 networks:
