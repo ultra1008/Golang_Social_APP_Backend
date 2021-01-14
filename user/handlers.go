@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -82,7 +83,7 @@ func (u *UserHandler) HandleUserRegistrate(c *gin.Context) {
 }
 
 func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
-	var errors []interface{}
+	var handlerErrors []interface{}
 
 	session, err := u.sessionStore.Get(c.Request, config.SessionName)
 	if err != nil {
@@ -93,8 +94,8 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 
 	req := &UserCreateRequest{}
 	if err := c.ShouldBind(&req); err != nil {
-		errors = append(errors, err.Error())
-		c.HTML(http.StatusOK, "registrate", ViewData{Errors: errors})
+		handlerErrors = append(handlerErrors, err.Error())
+		c.HTML(http.StatusOK, "registrate", ViewData{Errors: handlerErrors})
 		return
 	}
 
@@ -108,12 +109,12 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 
 	if err := req.Validate(); err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			errors = append(errors, fieldError{err: e}.String())
+			handlerErrors = append(handlerErrors, fieldError{err: e}.String())
 		}
 	}
 
-	if len(errors) > 0 {
-		for _, e := range errors {
+	if len(handlerErrors) > 0 {
+		for _, e := range handlerErrors {
 			session.AddFlash(e)
 		}
 
@@ -129,18 +130,24 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 
 	_, err = u.userService.Create(req.ConverIntoUser())
 	if err != nil {
+		if errors.Is(err, ErrUserAlreadyExist) {
+			session.AddFlash("Пользователь с таким логином уже существует")
+
+			if err := session.Save(c.Request, c.Writer); err != nil {
+				log.Printf("saving session: %v", err)
+				c.Status(http.StatusInternalServerError)
+				return
+			}
+			c.Redirect(http.StatusFound, "/registrate")
+			return
+		}
+
 		fmt.Printf("user creation: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	session.AddFlash("Регистрация успешно пройдена")
-
-	if err := session.Save(c.Request, c.Writer); err != nil {
-		log.Printf("saving session: %v", err)
-		c.Status(http.StatusInternalServerError)
-		return
-	}
 
 	c.Redirect(http.StatusFound, "/login")
 }
@@ -191,22 +198,22 @@ func (u *UserHandler) HandleUserLogin(c *gin.Context) {
 
 func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 	var req UserLoginRequest
-	var errors []interface{}
+	var handlerErrors []interface{}
 
 	if err := c.ShouldBind(&req); err != nil {
-		errors = append(errors, err.Error())
-		c.HTML(http.StatusBadRequest, "login", ViewData{Errors: errors})
+		handlerErrors = append(handlerErrors, err.Error())
+		c.HTML(http.StatusBadRequest, "login", ViewData{Errors: handlerErrors})
 		return
 	}
 
 	if err := req.Validate(); err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
-			errors = append(errors, fieldError{err: e}.String())
+			handlerErrors = append(handlerErrors, fieldError{err: e}.String())
 		}
 	}
 
-	if len(errors) > 0 {
-		c.HTML(http.StatusUnprocessableEntity, "login", ViewData{Errors: errors})
+	if len(handlerErrors) > 0 {
+		c.HTML(http.StatusUnprocessableEntity, "login", ViewData{Errors: handlerErrors})
 		return
 	}
 
@@ -218,8 +225,8 @@ func (u *UserHandler) HandleUserLoginSubmit(c *gin.Context) {
 	}
 
 	if user == nil || !u.userService.CheckPasswordsEquality(req.Password, user.Password) {
-		errors = append(errors, "Указан неверный логин или пароль")
-		c.HTML(http.StatusForbidden, "login", ViewData{Errors: errors})
+		handlerErrors = append(handlerErrors, "Указан неверный логин или пароль")
+		c.HTML(http.StatusForbidden, "login", ViewData{Errors: handlerErrors})
 		return
 	}
 

@@ -9,6 +9,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	ErrUserAlreadyExist = fmt.Errorf("user already exist")
+)
+
 type repository interface {
 	Create(user *User) (*User, error)
 	List() ([]User, error)
@@ -39,7 +43,7 @@ func (s *Service) Create(user *User) (*User, error) {
 		return nil, err
 	}
 	if ok {
-		return nil, fmt.Errorf("user already exist")
+		return nil, ErrUserAlreadyExist
 	}
 
 	city, err := s.cityService.Create(user.City)
