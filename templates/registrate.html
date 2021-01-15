@@ -51,12 +51,9 @@
                         <input type="text" class="form-control" name="inputCity">
                     </div>
                     <div class="form-group">
-                        <label for="exampleInputPassword1">Интересы</label>
-                        <select name="inputInterests" class="form-select" id="choices-multiple-remove-button" multiple>
-                            {{range .Interests}}
-                            <option value="{{.Name}}">{{.Name}}</option>
-                            {{end}}
-                        </select>
+                        <label for="exampleInputPassword1" >Интересы</label>
+                        <input type="text" name="inputInterests" aria-describedby="interestsHelp" class="form-control">
+                        <small id="interestsHelp" class="form-text text-muted">Через запятую</small>
                     </div>
                 </div>
             </div>

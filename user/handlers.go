@@ -99,14 +99,6 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 		return
 	}
 
-	if err := c.Request.ParseForm(); err != nil {
-		log.Printf("parse form user handler: %v", err)
-		c.Status(http.StatusInternalServerError)
-		return
-	}
-
-	req.Interests = c.Request.Form["inputInterests"]
-
 	if err := req.Validate(); err != nil {
 		for _, e := range err.(validator.ValidationErrors) {
 			handlerErrors = append(handlerErrors, fieldError{err: e}.String())
@@ -148,6 +140,12 @@ func (u *UserHandler) HandleUserRegistrateSubmit(c *gin.Context) {
 	}
 
 	session.AddFlash("Регистрация успешно пройдена")
+
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		log.Printf("saving session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.Redirect(http.StatusFound, "/login")
 }
@@ -317,18 +315,20 @@ func (u *UserHandler) HandleAddFriend(c *gin.Context) {
 	userLogin := c.Param("login")
 
 	if authUser == nil {
-		c.HTML(http.StatusUnauthorized, "login", nil)
+		c.Redirect(http.StatusUnauthorized, "login")
 		return
 	}
 
 	user, err := u.userService.GetUserByLogin(userLogin)
 	if err != nil {
+		log.Printf("find user by login: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	err = u.userService.AddFriend(authUser.ID, user.ID)
 	if err != nil {
+		log.Printf("addint to friends: %v", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}

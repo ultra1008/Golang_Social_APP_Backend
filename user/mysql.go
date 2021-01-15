@@ -184,7 +184,7 @@ func (m *mysql) AddFriend(userId int, friendId int) error {
 		return fmt.Errorf("user ID and friend ID are equal")
 	}
 
-	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId)
+	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId, friendId, userId)
 	if err != nil {
 		return fmt.Errorf("adding friend with ID %d to user ID %d: %v", friendId, userId, err)
 	}
@@ -210,7 +210,7 @@ func (m *mysql) DeleteFriend(userId int, friendId int) error {
 		return fmt.Errorf("user ID and friend ID are equal")
 	}
 
-	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId)
+	res, err := m.db.ExecContext(ctx, query.SQL, userId, friendId, friendId, userId)
 	if err != nil {
 		return fmt.Errorf("deleting friend with ID %d from user ID %d: %v", friendId, userId, err)
 	}

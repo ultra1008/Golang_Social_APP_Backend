@@ -173,7 +173,7 @@ func Test_mysql_AddFriend(t *testing.T) {
 	testUserId := 1
 	testFriendId := 2
 
-	res := sqlmock.NewResult(1, 1)
+	res := sqlmock.NewResult(1, 2)
 	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
 
 	err = repo.AddFriend(testUserId, testFriendId)

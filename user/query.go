@@ -78,11 +78,11 @@ func init() {
 	}
 
 	queryMap[addFriend] = Query{
-		SQL:     `INSERT INTO friends (user_id, friend_id) VALUES (?, ?)`,
+		SQL:     `INSERT INTO friends (user_id, friend_id) VALUES (?, ?), (?, ?);`,
 		Timeout: 10 * time.Second,
 	}
 	queryMap[deleteFriend] = Query{
-		SQL:     `DELETE FROM friends WHERE user_id = ? AND friend_id = ?`,
+		SQL:     `DELETE FROM friends WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)`,
 		Timeout: 10 * time.Second,
 	}
 	queryMap[getFriends] = Query{
