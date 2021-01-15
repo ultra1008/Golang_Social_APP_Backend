@@ -174,7 +174,7 @@ func Test_mysql_AddFriend(t *testing.T) {
 	testFriendId := 2
 
 	res := sqlmock.NewResult(1, 2)
-	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+	mock.ExpectExec("INSERT INTO friends ").WithArgs(testUserId, testFriendId, testFriendId, testUserId).WillReturnResult(res)
 
 	err = repo.AddFriend(testUserId, testFriendId)
 
@@ -244,7 +244,7 @@ func Test_mysql_DeleteFriend(t *testing.T) {
 	testFriendId := 2
 
 	res := sqlmock.NewResult(1, 1)
-	mock.ExpectExec("DELETE FROM friends ").WithArgs(testUserId, testFriendId).WillReturnResult(res)
+	mock.ExpectExec("DELETE FROM friends ").WithArgs(testUserId, testFriendId, testFriendId, testUserId).WillReturnResult(res)
 
 	err = repo.DeleteFriend(testUserId, testFriendId)
 

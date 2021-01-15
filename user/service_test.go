@@ -1,7 +1,7 @@
 package user
 
 import (
-	"strings"
+	"errors"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -85,7 +85,7 @@ func TestService_Create_UserAlreadyExist(t *testing.T) {
 	_, err = userSvc.Create(testUser)
 
 	assert.NotNil(t, err)
-	if !strings.Contains(err.Error(), expectedErrorString) {
+	if !errors.Is(err, ErrUserAlreadyExist) {
 		t.Errorf("got %v; should contain %v", err.Error(), expectedErrorString)
 	}
 }
