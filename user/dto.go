@@ -66,3 +66,8 @@ func (q fieldError) String() string {
 
 	return sb.String()
 }
+
+type UserSearchRequest struct {
+	FirstName string `form:"firstName"`
+	LastName  string `form:"lastName"`
+}

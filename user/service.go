@@ -18,6 +18,7 @@ type repository interface {
 	List() ([]User, error)
 	GetByID(id int) (*User, error)
 	GetByLogin(login string) (*User, error)
+	GetByFirstAndLastName(firstname, lastname string) ([]User, error)
 	AddFriend(userId int, friendId int) error
 	DeleteFriend(userId int, friendId int) error
 	Friends(userId int) ([]User, error)
@@ -88,6 +89,10 @@ func (s *Service) Create(user *User) (*User, error) {
 
 func (s *Service) Users() ([]User, error) {
 	return s.userRepo.List()
+}
+
+func (s *Service) UsersByFirstAndLastName(firstname, lastname string) ([]User, error) {
+	return s.userRepo.GetByFirstAndLastName(firstname, lastname)
 }
 
 func (s *Service) CreatePassword(pass string) (string, error) {

@@ -399,7 +399,15 @@ func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
 func (u *UserHandler) HandleUsersList(c *gin.Context) {
 	authUser := getUser(c)
 
-	users, err := u.userService.Users()
+	req := UserSearchRequest{}
+
+	if err := c.ShouldBind(&req); err != nil {
+		log.Printf("gettings user list in handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	users, err := u.userService.userRepo.GetByFirstAndLastName(req.FirstName, req.LastName)
 	if err != nil {
 		log.Printf("gettings user list in handler: %v", err)
 		c.Status(http.StatusInternalServerError)

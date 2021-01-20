@@ -3,16 +3,41 @@
 <html lang="en">
 <head>
     {{template "head"}}
+    <style>
+        .user-search {
+            margin-bottom:5px;
+        }
+        .user-search-item {
+            margin-bottom:5px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         {{template "header" .AuthenticatedUser}}
         <h1>Пользователи</h1>
+        <div class="user-search">
+            <form action="" method="GET">
+                <div class="row">
+                    <div class="col-md-5">
+                        <input placeholder="Имя" type="text" class="form-control" name="firstName">
+                    </div>
+                    <div class="col-md-5">
+                        <input placeholder="Фамилия" type="text" class="form-control" name="lastName">
+                    </div>
+                        <button type="submit" class="btn btn-primary">Поиск</button>
+                </div>
+            </form>
+        </div>
         {{range .Users}}
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{.FirstName}}{{.Lastname}}</h5>
-                <a href="/user/{{.Login}}" class="btn btn-primary">Перейти в профиль</a>
+        <div class="row">
+            <div class="col">
+                <div class="card user-search-item">
+                    <div class="card-body">
+                        <h5 class="card-title">{{.FirstName}}{{.Lastname}}</h5>
+                        <a href="/user/{{.Login}}" class="btn btn-primary">Перейти в профиль</a>
+                    </div>
+                </div>
             </div>
         </div>
         {{end}}

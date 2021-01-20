@@ -365,3 +365,70 @@ func Test_mysql_Friends_Error(t *testing.T) {
 	assert.Nil(t, friends)
 	assert.Error(t, err, testError)
 }
+
+func Test_mysql_GetByFirstAndLastName(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstName := "TestName"
+	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastName := "TestLastName"
+
+	repo := NewRepository(db)
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", 1, "TestCity")
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnRows(rows)
+	users, err := repo.GetByFirstAndLastName(testFirstName, testLastName)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(users))
+}
+
+func Test_mysql_GetByFirstAndLastName_NoRows(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstName := "TestName"
+	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastName := "TestLastName"
+
+	repo := NewRepository(db)
+
+	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnRows(rows)
+	users, err := repo.GetByFirstAndLastName(testFirstName, testLastName)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(users))
+}
+
+func Test_mysql_GetByFirstAndLastName_Error(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testError := fmt.Errorf("Test error")
+
+	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstName := "TestName"
+	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastName := "TestLastName"
+
+	repo := NewRepository(db)
+
+	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnError(testError)
+	_, err = repo.GetByFirstAndLastName(testFirstName, testLastName)
+
+	assert.NotNil(t, err)
+	assert.Error(t, err, testError)
+}

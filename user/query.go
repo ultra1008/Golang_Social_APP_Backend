@@ -7,6 +7,7 @@ const (
 	listQuery
 	getByID
 	getByLogin
+	GetByFirstAndLastName
 	addFriend
 	getFriends
 	deleteFriend
@@ -75,6 +76,23 @@ func init() {
 				WHERE u.login = ?
 				ORDER BY u.first_name`,
 		Timeout: 10 * time.Second,
+	}
+
+	queryMap[GetByFirstAndLastName] = Query{
+		SQL: `SELECT u.id
+				, u.first_name
+				, u.last_name
+				, u.age
+				, u.sex
+				, u.login
+				, u.city_id
+				, c.city_name
+			FROM users as u
+					LEFT JOIN citys as c ON u.city_id = c.id
+			WHERE u.first_name like ?
+			AND u.last_name like ?
+			ORDER BY u.id`,
+		Timeout: 2 * time.Minute,
 	}
 
 	queryMap[addFriend] = Query{

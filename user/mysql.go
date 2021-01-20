@@ -136,6 +136,55 @@ func (m *mysql) GetByID(id int) (*User, error) {
 	return &user, nil
 }
 
+func (m *mysql) GetByFirstAndLastName(firstname, lastname string) ([]User, error) {
+	query := queryMap[GetByFirstAndLastName]
+
+	ctx, cancel := context.WithTimeout(context.Background(), query.Timeout)
+	defer cancel()
+
+	var cityName sql.NullString
+	var cityID sql.NullInt64
+
+	users := []User{}
+
+	firstNameQuery := "%" + firstname + "%"
+	lastNameQuery := "%" + lastname + "%"
+
+	rows, err := m.db.QueryContext(ctx, query.SQL, firstNameQuery, lastNameQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var user User
+
+		err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.Lastname,
+			&user.Age,
+			&user.Sex,
+			&user.Login,
+			&cityID,
+			&cityName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("get user by id: scanning user sql row: %v", err)
+		}
+
+		user.City = city.City{}
+
+		if cityName.Valid && cityID.Valid {
+			user.City.Name = cityName.String
+			user.City.ID = int(cityID.Int64)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func (m *mysql) GetByLogin(login string) (*User, error) {
 	query := queryMap[getByLogin]
 
