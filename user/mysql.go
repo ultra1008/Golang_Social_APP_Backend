@@ -147,10 +147,10 @@ func (m *mysql) GetByFirstAndLastName(firstname, lastname string) ([]User, error
 
 	users := []User{}
 
-	firstNameQuery := "%" + firstname + "%"
-	lastNameQuery := "%" + lastname + "%"
+	firstNameQuery := firstname + "%"
+	lastNameQuery := lastname + "%"
 
-	rows, err := m.db.QueryContext(ctx, query.SQL, firstNameQuery, lastNameQuery)
+	rows, err := m.db.QueryContext(ctx, query.SQL, lastNameQuery, firstNameQuery)
 	if err != nil {
 		return nil, err
 	}

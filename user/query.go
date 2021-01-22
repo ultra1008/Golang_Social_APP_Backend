@@ -89,8 +89,8 @@ func init() {
 				, c.city_name
 			FROM users as u
 					LEFT JOIN citys as c ON u.city_id = c.id
-			WHERE u.first_name like ?
-			AND u.last_name like ?
+			WHERE u.last_name like ?
+			AND u.first_name like ?
 			ORDER BY u.id
 			LIMIT 100;`,
 		Timeout: 2 * time.Minute,

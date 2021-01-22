@@ -372,9 +372,9 @@ func Test_mysql_GetByFirstAndLastName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstNameArg := "TestName" + "%"
 	testFirstName := "TestName"
-	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastNameArg := "TestLastName" + "%"
 	testLastName := "TestLastName"
 
 	repo := NewRepository(db)
@@ -395,9 +395,9 @@ func Test_mysql_GetByFirstAndLastName_NoRows(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstNameArg := "TestName" + "%"
 	testFirstName := "TestName"
-	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastNameArg := "TestLastName" + "%"
 	testLastName := "TestLastName"
 
 	repo := NewRepository(db)
@@ -419,9 +419,9 @@ func Test_mysql_GetByFirstAndLastName_Error(t *testing.T) {
 
 	testError := fmt.Errorf("Test error")
 
-	testFirstNameArg := "%" + "TestName" + "%"
+	testFirstNameArg := "TestName" + "%"
 	testFirstName := "TestName"
-	testLastNameArg := "%" + "TestLastName" + "%"
+	testLastNameArg := "TestLastName" + "%"
 	testLastName := "TestLastName"
 
 	repo := NewRepository(db)
