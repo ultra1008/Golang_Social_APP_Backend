@@ -13,6 +13,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql:/var/lib/mysql
+      - ./deployment/mysql/master/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
     networks:
       - backend
   app:
