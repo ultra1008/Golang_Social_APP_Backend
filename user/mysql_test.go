@@ -382,7 +382,7 @@ func Test_mysql_GetByFirstAndLastName(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
 	rows.AddRow(1, "TestFirst", "TestLast", 12, "Мужчина", "TestLogin", 1, "TestCity")
 
-	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT u.id").WithArgs(testLastNameArg, testFirstNameArg).WillReturnRows(rows)
 	users, err := repo.GetByFirstAndLastName(testFirstName, testLastName)
 
 	assert.NoError(t, err)
@@ -405,7 +405,7 @@ func Test_mysql_GetByFirstAndLastName_NoRows(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "first_name", "last_name", "age", "sex", "login", "city_id", "city_name"})
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnRows(rows)
-	users, err := repo.GetByFirstAndLastName(testFirstName, testLastName)
+	users, err := repo.GetByFirstAndLastName(testLastName, testFirstName)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(users))
@@ -427,7 +427,7 @@ func Test_mysql_GetByFirstAndLastName_Error(t *testing.T) {
 	repo := NewRepository(db)
 
 	mock.ExpectQuery("SELECT u.id").WithArgs(testFirstNameArg, testLastNameArg).WillReturnError(testError)
-	_, err = repo.GetByFirstAndLastName(testFirstName, testLastName)
+	_, err = repo.GetByFirstAndLastName(testLastName, testFirstName)
 
 	assert.NotNil(t, err)
 	assert.Error(t, err, testError)
