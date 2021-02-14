@@ -13,6 +13,7 @@ services:
     volumes:
       - ./mysql-data:/var/lib/mysql
       - ./deployment/mysql/master/conf/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+      - ./deployment/mysql/master/conf/my.cnf:/etc/mysql/my.cnf
     networks:
       - backend
   app:

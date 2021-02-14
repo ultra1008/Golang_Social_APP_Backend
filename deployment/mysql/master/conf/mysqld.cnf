@@ -71,10 +71,11 @@ log_error = /var/log/mysql/error.log
 # note: if you are setting up a replication slave, see README.Debian about
 #       other settings you may need to change.
 server-id		= 1
-log_bin			= mysql-bin
+log-bin			= mysql-bin
 binlog_format = ROW
 gtid-mode = ON
 enforce-gtid-consistency
+log-slave-updates
 max_binlog_size   = 500M
 # binlog_expire_logs_seconds	= 2592000
 # binlog_do_db		= include_database_name
