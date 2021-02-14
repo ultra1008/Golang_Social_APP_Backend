@@ -62,7 +62,7 @@ myisam-recover-options  = BACKUP
 log_error = /var/log/mysql/error.log
 #
 # Here you can see queries with especially long duration
-slow_query_log		= 1
+# slow_query_log		= 1
 # slow_query_log_file	= /var/log/mysql/mysql-slow.log
 # long_query_time = 2
 # log-queries-not-using-indexes
@@ -73,10 +73,9 @@ slow_query_log		= 1
 server-id		= 1
 log_bin			= mysql-bin
 binlog_format = ROW
-# binlog_expire_logs_seconds	= 2592000
-gtid-mode=ON
+gtid-mode = ON
 enforce-gtid-consistency
-log-slave-updates
 max_binlog_size   = 500M
+# binlog_expire_logs_seconds	= 2592000
 # binlog_do_db		= include_database_name
 # binlog_ignore_db	= include_database_name
