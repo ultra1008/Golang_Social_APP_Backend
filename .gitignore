@@ -2,3 +2,5 @@
 /build
 mysql/*
 mysql-data/*
+user/mysql.go
+launch.json
