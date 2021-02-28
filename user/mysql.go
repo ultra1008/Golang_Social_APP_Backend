@@ -154,6 +154,7 @@ func (m *mysql) GetByFirstAndLastName(firstname, lastname string) ([]User, error
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var user User
@@ -169,7 +170,7 @@ func (m *mysql) GetByFirstAndLastName(firstname, lastname string) ([]User, error
 			&cityName,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("get user by id: scanning user sql row: %v", err)
+			return nil, fmt.Errorf("get user by first and last name: scanning user sql row: %v", err)
 		}
 
 		user.City = city.City{}
@@ -180,6 +181,10 @@ func (m *mysql) GetByFirstAndLastName(firstname, lastname string) ([]User, error
 		}
 
 		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("get user by first and last name: iterating through rows %v", err)
 	}
 
 	return users, nil
