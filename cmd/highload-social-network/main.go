@@ -18,6 +18,7 @@ import (
 	"github.com/niklod/highload-social-network/user"
 	"github.com/niklod/highload-social-network/user/city"
 	"github.com/niklod/highload-social-network/user/interest"
+	"github.com/niklod/highload-social-network/user/post"
 
 	"github.com/niklod/highload-social-network/config"
 	"github.com/niklod/highload-social-network/server"
@@ -38,17 +39,25 @@ func main() {
 	userRepo := user.NewRepository(db)
 	cityRepo := city.NewRepository(db)
 	interestRepo := interest.NewRepository(db)
+	postRepo := post.NewRepository(db)
 
 	// Services
 	cityService := city.NewService(cityRepo)
 	interestService := interest.NewService(interestRepo)
 	userService := user.NewService(userRepo, cityService, interestService)
+	postService := post.NewService(postRepo)
 
-	ss := sessions.NewCookieStore([]byte(cfg.SecretKey))
+	cookieStore := sessions.NewCookieStore([]byte(cfg.SecretKey))
 	gob.Register(user.User{})
 
 	// Handlers
-	userHandler := user.NewHandler(userService, cityService, ss, interestService)
+	userHandler := user.NewHandler(
+		userService,
+		cityService,
+		postService,
+		cookieStore,
+		interestService,
+	)
 
 	srv := server.NewHTTPServer(cfg.Server)
 	srv.BaseRouterGroup.Use(userHandler.AuthMiddleware)
@@ -73,6 +82,8 @@ func main() {
 	// Добавление Удаление из друзей
 	srv.BaseRouterGroup.POST("/user/:login/add_friend", userHandler.HandleAddFriend)
 	srv.BaseRouterGroup.POST("/user/:login/delete_friend", userHandler.HandleDeleteFriend)
+
+	srv.BaseRouterGroup.POST("/user/:login/add_post", userHandler.HandleAddPost)
 
 	// Список пользователей
 	srv.BaseRouterGroup.GET("/users", userHandler.HandleUsersList)
