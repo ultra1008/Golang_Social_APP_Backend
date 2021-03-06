@@ -23,7 +23,7 @@ type DBConfig struct {
 }
 
 func (d *DBConfig) ConnectionString() string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", d.Login, d.Password, d.Host, d.Port, d.DBName)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", d.Login, d.Password, d.Host, d.Port, d.DBName)
 }
 
 type HTTPServerConfig struct {
