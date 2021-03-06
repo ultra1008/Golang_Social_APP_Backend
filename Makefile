@@ -6,8 +6,5 @@ build:
 run:
 	./build/highload-social-network
 
-up:
-	docker-compose -f deployment/docker-compose.yml up
-
-down:
-	docker-compose -f deployment/docker-compose.yml down
+test:
+	go test ./... -v -race -timeout=30s
