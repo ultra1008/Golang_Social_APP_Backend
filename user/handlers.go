@@ -11,6 +11,7 @@ import (
 	"github.com/niklod/highload-social-network/config"
 	"github.com/niklod/highload-social-network/user/city"
 	"github.com/niklod/highload-social-network/user/interest"
+	"github.com/niklod/highload-social-network/user/post"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,18 +34,21 @@ type UserHandler struct {
 	userService     *Service
 	cityService     *city.Service
 	interestService *interest.Service
+	postService     *post.Service
 	sessionStore    *sessions.CookieStore
 }
 
 func NewHandler(
 	userService *Service,
 	cityService *city.Service,
+	postService *post.Service,
 	sessionStore *sessions.CookieStore,
 	interestService *interest.Service,
 ) *UserHandler {
 	return &UserHandler{
 		userService:     userService,
 		cityService:     cityService,
+		postService:     postService,
 		sessionStore:    sessionStore,
 		interestService: interestService,
 	}
@@ -283,6 +287,14 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 	}
 	user.Interests = userInterests
 
+	userPosts, err := u.postService.PostsByUserId(user.ID)
+	if err != nil {
+		log.Printf("user detail, getting posts: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	user.Posts = userPosts
+
 	user.Sanitize()
 
 	if authUser != nil {
@@ -301,6 +313,8 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 		AuthenticatedUser: authUser,
 		UsersAreFriends:   u.userService.IsUsersAreFriends(authUser, user),
 	}
+
+	fmt.Printf("%+v\n", data.User)
 
 	err = session.Save(c.Request, c.Writer)
 	if err != nil {
@@ -392,6 +406,41 @@ func (u *UserHandler) HandleDeleteFriend(c *gin.Context) {
 	}
 
 	redirectLocation := fmt.Sprintf("/user/%s", user.Login)
+
+	c.Redirect(http.StatusSeeOther, redirectLocation)
+}
+
+func (u *UserHandler) HandleAddPost(c *gin.Context) {
+	authUser := getUser(c)
+	postBody := c.PostForm("post")
+
+	if authUser == nil {
+		c.Redirect(http.StatusUnauthorized, "login")
+		return
+	}
+
+	post := &post.Post{Body: postBody}
+
+	err := u.postService.Add(post, authUser.ID)
+	if err != nil {
+		log.Printf("addint post: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("get session user handler: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	err = session.Save(c.Request, c.Writer)
+	if err != nil {
+		log.Printf("save session with flashes: %v", err)
+	}
+
+	redirectLocation := fmt.Sprintf("/user/%s", authUser.Login)
 
 	c.Redirect(http.StatusSeeOther, redirectLocation)
 }
