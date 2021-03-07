@@ -1,7 +1,7 @@
 .PHONY: build test
 
 build:
-	go build -v ./cmd/highload-social-network
+	go build -v -o /build/hsn ./cmd/highload-social-network
 
 run:
 	./build/highload-social-network
