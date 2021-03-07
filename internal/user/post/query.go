@@ -8,6 +8,7 @@ import (
 const (
 	PostsByUserId int = iota
 	InsertPost
+	GetUserFeedById
 )
 
 type Query struct {
@@ -44,5 +45,24 @@ func init() {
 		SQL: `INSERT INTO posts (user_id, body) 
 			  VALUES (?, ?);`,
 		Timeout: time.Second * 10,
+	}
+
+	queryMap[GetUserFeedById] = Query{
+		SQL: `SELECT p.id
+					, p.created_at
+					, p.updated_at
+					, p.body
+					, u.first_name
+					, u.last_name
+					, u.login
+              FROM posts p
+			  LEFT JOIN users u on u.id = p.user_id
+              WHERE p.user_id IN (
+              	SELECT f.friend_id
+              	FROM friends f
+              	WHERE user_id = ?
+              )
+              ORDER BY p.created_at desc`,
+		Timeout: time.Second * 40,
 	}
 }
