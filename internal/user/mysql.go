@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/niklod/highload-social-network/user/city"
+	"github.com/niklod/highload-social-network/internal/user/city"
 )
 
 type mysql struct {

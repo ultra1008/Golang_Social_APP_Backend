@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/niklod/highload-social-network/user/city"
-	"github.com/niklod/highload-social-network/user/interest"
+	"github.com/niklod/highload-social-network/internal/user/city"
+	"github.com/niklod/highload-social-network/internal/user/interest"
 	"github.com/stretchr/testify/assert"
 )
 

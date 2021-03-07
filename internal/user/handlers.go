@@ -6,14 +6,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
-	"github.com/niklod/highload-social-network/config"
-	"github.com/niklod/highload-social-network/user/city"
-	"github.com/niklod/highload-social-network/user/interest"
-	"github.com/niklod/highload-social-network/user/post"
 
-	"github.com/gin-gonic/gin"
+	"github.com/niklod/highload-social-network/config"
+	"github.com/niklod/highload-social-network/internal/user/city"
+	"github.com/niklod/highload-social-network/internal/user/interest"
+	"github.com/niklod/highload-social-network/internal/user/post"
 )
 
 const (

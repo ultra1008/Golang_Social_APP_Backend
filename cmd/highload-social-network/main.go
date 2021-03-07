@@ -15,13 +15,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 
-	"github.com/niklod/highload-social-network/user"
-	"github.com/niklod/highload-social-network/user/city"
-	"github.com/niklod/highload-social-network/user/interest"
-	"github.com/niklod/highload-social-network/user/post"
-
 	"github.com/niklod/highload-social-network/config"
-	"github.com/niklod/highload-social-network/server"
+	"github.com/niklod/highload-social-network/internal/server"
+	"github.com/niklod/highload-social-network/internal/user"
+	"github.com/niklod/highload-social-network/internal/user/city"
+	"github.com/niklod/highload-social-network/internal/user/interest"
+	"github.com/niklod/highload-social-network/internal/user/post"
 )
 
 func main() {

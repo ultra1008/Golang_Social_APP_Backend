@@ -4,8 +4,9 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/niklod/highload-social-network/user/city"
-	"github.com/niklod/highload-social-network/user/interest"
+
+	"github.com/niklod/highload-social-network/internal/user/city"
+	"github.com/niklod/highload-social-network/internal/user/interest"
 )
 
 type UserCreateRequest struct {
