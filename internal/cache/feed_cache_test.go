@@ -3,14 +3,13 @@ package cache
 import (
 	"testing"
 
-	"github.com/niklod/highload-social-network/internal/user/post"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFeedCache_WriteRead(t *testing.T) {
 	cache := NewFeedCache()
 
-	testKey, testValue := 1, post.Post{}
+	testKey, testValue := 1, "testValue"
 
 	cache.Write(testKey, testValue)
 
@@ -24,8 +23,8 @@ func TestFeedCache_WriteRead_ReplacePrevValue(t *testing.T) {
 	cache := NewFeedCache()
 
 	testKey := 1
-	testValue := post.Feed{}
-	testValue2 := post.Feed{{ID: 1}}
+	testValue := []int{}
+	testValue2 := []int{1}
 
 	cache.Write(testKey, testValue)
 
@@ -34,14 +33,14 @@ func TestFeedCache_WriteRead_ReplacePrevValue(t *testing.T) {
 	assert.NotEqual(t, false, ok)
 	assert.Equal(t, v, testValue)
 
-	c := v.(post.Feed)
+	c := v.([]int)
 	assert.Equal(t, len(c), len(testValue))
 
 	cache.Write(testKey, testValue2)
 
 	v, ok = cache.Read(testKey)
 
-	c = v.(post.Feed)
+	c = v.([]int)
 	assert.NotEqual(t, false, ok)
 	assert.Equal(t, c, testValue2)
 	assert.Equal(t, len(c), len(testValue2))
