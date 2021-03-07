@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/sessions"
 
 	"github.com/niklod/highload-social-network/config"
+	"github.com/niklod/highload-social-network/internal/cache"
 	"github.com/niklod/highload-social-network/internal/server"
 	"github.com/niklod/highload-social-network/internal/user"
 	"github.com/niklod/highload-social-network/internal/user/city"
@@ -39,12 +40,13 @@ func main() {
 	cityRepo := city.NewRepository(db)
 	interestRepo := interest.NewRepository(db)
 	postRepo := post.NewRepository(db)
+	feedCache := cache.NewFeedCache()
 
 	// Services
 	cityService := city.NewService(cityRepo)
 	interestService := interest.NewService(interestRepo)
 	userService := user.NewService(userRepo, cityService, interestService)
-	postService := post.NewService(postRepo)
+	postService := post.NewService(postRepo, feedCache)
 
 	cookieStore := sessions.NewCookieStore([]byte(cfg.SecretKey))
 	gob.Register(user.User{})
