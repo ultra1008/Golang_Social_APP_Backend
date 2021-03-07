@@ -36,6 +36,9 @@ func (m *mysql) PostsByUserId(id int) ([]Post, error) {
 			&post.CreatedAt,
 			&post.UpdatedAt,
 			&post.Body,
+			&post.Author.FirstName,
+			&post.Author.LastName,
+			&post.Author.Login,
 		)
 		if err != nil {
 			log.Printf("posts.postbyuserid - scanning user: %v", err)

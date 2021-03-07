@@ -30,7 +30,11 @@ func init() {
 					, p.created_at
 					, p.updated_at
 					, p.body
+					, u.first_name
+					, u.last_name
+					, u.login
 			  FROM posts as p
+			  LEFT JOIN users u on u.id = p.user_id
 			  WHERE p.user_id = ?
 			  ORDER BY p.created_at desc`,
 		Timeout: time.Second * 10,
