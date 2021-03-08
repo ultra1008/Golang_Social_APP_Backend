@@ -1,0 +1,30 @@
+{{define "user_feed"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head"}}
+</head>
+<body>
+    <div class="container">
+        {{template "header" .AuthenticatedUser}}
+        {{template "errors" .Errors}}
+        {{template "messages" .Messages}}
+        <div class="row">
+            <div class="col">
+                {{range .Feed}}
+                    <div class="card" style="margin-top:5px;">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <a href="/user/{{.Author.Login}}/">{{.Author.FirstName}} {{.Author.LastName}}</a>
+                            </h5>
+                            <p class="card-text">{{.Body}}</p>
+                        </div>
+                    </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+    {{template "scripts"}}
+</body>
+</html>
+{{end}}

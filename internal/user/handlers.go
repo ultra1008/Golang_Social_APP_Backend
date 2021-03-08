@@ -28,6 +28,7 @@ type ViewData struct {
 	User              *User
 	AuthenticatedUser *User
 	UsersAreFriends   bool
+	Feed              post.Feed
 }
 
 type UserHandler struct {
@@ -314,8 +315,6 @@ func (u *UserHandler) HandleUserDetail(c *gin.Context) {
 		UsersAreFriends:   u.userService.IsUsersAreFriends(authUser, user),
 	}
 
-	fmt.Printf("%+v\n", data.User)
-
 	err = session.Save(c.Request, c.Writer)
 	if err != nil {
 		log.Printf("save session with flashes: %v", err)
@@ -419,9 +418,17 @@ func (u *UserHandler) HandleAddPost(c *gin.Context) {
 		return
 	}
 
-	post := &post.Post{Body: postBody}
+	post := &post.Post{
+		Body: postBody,
+		Author: post.Author{
+			ID:        authUser.ID,
+			FirstName: authUser.FirstName,
+			LastName:  authUser.Lastname,
+			Login:     authUser.Login,
+		},
+	}
 
-	err := u.postService.Add(post, authUser.ID)
+	err := u.postService.Add(post)
 	if err != nil {
 		log.Printf("addint post: %v", err)
 		c.Status(http.StatusInternalServerError)
@@ -443,6 +450,42 @@ func (u *UserHandler) HandleAddPost(c *gin.Context) {
 	redirectLocation := fmt.Sprintf("/user/%s", authUser.Login)
 
 	c.Redirect(http.StatusSeeOther, redirectLocation)
+}
+
+func (u *UserHandler) HandleFeed(c *gin.Context) {
+	authUser := getUser(c)
+
+	session, err := u.sessionStore.Get(c.Request, config.SessionName)
+	if err != nil {
+		log.Printf("user detail, getting session: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	if authUser == nil {
+		c.Redirect(http.StatusUnauthorized, "/login")
+		return
+	}
+
+	feed, err := u.postService.UserFeed(authUser.ID)
+	if err != nil {
+		log.Printf("feed page, getting user feed: %v", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	data := ViewData{
+		Messages:          session.Flashes(),
+		AuthenticatedUser: authUser,
+		Feed:              feed,
+	}
+
+	err = session.Save(c.Request, c.Writer)
+	if err != nil {
+		log.Printf("save session with flashes: %v", err)
+	}
+
+	c.HTML(http.StatusOK, "user_feed", data)
 }
 
 func (u *UserHandler) HandleUsersList(c *gin.Context) {
