@@ -1,4 +1,5 @@
 .env
+/.docker
 /build
 mysql/*
 mysql-data/*
