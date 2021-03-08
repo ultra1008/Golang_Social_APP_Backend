@@ -4,6 +4,11 @@ import (
 	"fmt"
 
 	"github.com/niklod/highload-social-network/internal/cache"
+	"github.com/niklod/highload-social-network/internal/queue/feed/producer"
+)
+
+const (
+	feedLength = 1000
 )
 
 var (
@@ -19,14 +24,16 @@ type repository interface {
 }
 
 type Service struct {
-	repo  repository
-	cache cache.Cache
+	repo     repository
+	cache    cache.Cache
+	producer *producer.FeedProducer
 }
 
-func NewService(repo repository, cache cache.Cache) *Service {
+func NewService(repo repository, cache cache.Cache, producer *producer.FeedProducer) *Service {
 	return &Service{
-		repo:  repo,
-		cache: cache,
+		repo:     repo,
+		cache:    cache,
+		producer: producer,
 	}
 }
 
@@ -40,6 +47,9 @@ func (s *Service) UserFeed(userId int) (Feed, error) {
 		userFeed, ok := v.(Feed)
 		if !ok {
 			return nil, fmt.Errorf("post.Service: %v", cache.ErrInvalidCacheItem)
+		}
+		if len(userFeed) > feedLength {
+			userFeed = userFeed[len(userFeed)-feedLength:]
 		}
 
 		return userFeed, nil
@@ -63,23 +73,34 @@ func (s *Service) PostsByUserId(id int) ([]Post, error) {
 	return s.repo.PostsByUserId(id)
 }
 
-func (s *Service) Add(post *Post, userId int) error {
+func (s *Service) Add(post *Post) error {
 	if post == nil {
 		return errNilPost
 	}
-	if userId <= 0 {
+
+	authorId := post.Author.ID
+
+	if authorId <= 0 {
 		return errIdLessThanZero
 	}
 	if post.Body == "" {
 		return errEmptyPostBody
 	}
 
-	err := s.repo.Add(post, userId)
+	err := s.repo.Add(post, authorId)
 	if err != nil {
 		return fmt.Errorf("post.Service: %v", err)
 	}
 
-	// add to queue
+	msg, err := post.AsByteJSON()
+	if err != nil {
+		return fmt.Errorf("post.Service - can't marshal post to []byte: %v", err)
+	}
+
+	err = s.producer.SendFeedUpdateMessage(msg)
+	if err != nil {
+		return fmt.Errorf("post.Service - can't send message to queue: %v", err)
+	}
 
 	return nil
 }
