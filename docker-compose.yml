@@ -1,19 +1,35 @@
 version: "3.3"
 services:
-  db:
-    image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+  # db:
+  #   image: mysql:8.0
+  #   command: --default-authentication-plugin=mysql_native_password
+  #   environment:
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE}
+  #     MYSQL_USER: ${MYSQL_USER}
+  #     MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - ./.docker/mysql-data:/var/lib/mysql
+  #     - ./.docker/deployment/mysql/master/conf/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+  #     - ./.docker/deployment/mysql/master/conf/my.cnf:/etc/mysql/my.cnf
+  #   networks:
+  #     - backend
+  rabbitmq:
+    image: rabbitmq:3.8-management-alpine
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "3306:3306"
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
-      - ./mysql-data:/var/lib/mysql
-      - ./deployment/mysql/master/conf/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
-      - ./deployment/mysql/master/conf/my.cnf:/etc/mysql/my.cnf
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./deployment/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    ports:
+      - "5672:5672"
+      - "15672:15672"
     networks:
       - backend
   app:
@@ -22,18 +38,25 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    expose:
-      - "8080"
     restart: unless-stopped
     depends_on:
-      - db
+      - rabbitmq
     environment:
-      DB_LOGIN: ${MYSQL_USER}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-      DB_HOST: db
-      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       SESSION_SECRET_KEY: ${SESSION_SECRET_KEY}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_COOKIE: ${RABBITMQ_COOKIE}
+      RABBITMQ_FEED_EXCHANGE_NAME: ${RABBITMQ_FEED_EXCHANGE_NAME}
+      RABBITMQ_FEED_QUEUE_NAME: ${RABBITMQ_FEED_QUEUE_NAME}
+      RABBITMQ_FEED_ROUTING_KEY: ${RABBITMQ_FEED_ROUTING_KEY}
+      RABBITMQ_FEED_RECEIVERS_COUNT: ${RABBITMQ_FEED_RECEIVERS_COUNT}
     networks:
       - backend
 networks:

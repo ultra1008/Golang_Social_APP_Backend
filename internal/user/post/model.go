@@ -1,11 +1,17 @@
 package post
 
 import (
+	"encoding/json"
+	"sort"
 	"time"
 )
 
-type Feed []Post
-
+type Author struct {
+	ID        int
+	FirstName string
+	LastName  string
+	Login     string
+}
 type Post struct {
 	ID        int
 	CreatedAt time.Time
@@ -14,8 +20,14 @@ type Post struct {
 	Author    Author
 }
 
-type Author struct {
-	FirstName string
-	LastName  string
-	Login     string
+func (p Post) AsByteJSON() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+type Feed []Post
+
+func (f Feed) Sort() {
+	sort.Slice(f, func(i, j int) bool {
+		return f[i].CreatedAt.After(f[j].CreatedAt)
+	})
 }

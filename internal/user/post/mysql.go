@@ -39,6 +39,7 @@ func (m *mysql) PostsByUserId(id int) ([]Post, error) {
 			&post.Author.FirstName,
 			&post.Author.LastName,
 			&post.Author.Login,
+			&post.Author.ID,
 		)
 		if err != nil {
 			log.Printf("posts.postbyuserid - scanning user: %v", err)
@@ -78,6 +79,7 @@ func (m *mysql) UserFeed(id int) (Feed, error) {
 			&post.Author.FirstName,
 			&post.Author.LastName,
 			&post.Author.Login,
+			&post.Author.ID,
 		)
 		if err != nil {
 			log.Printf("posts.UserFeed - scanning user: %v", err)
