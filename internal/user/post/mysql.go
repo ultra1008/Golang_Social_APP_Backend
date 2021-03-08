@@ -36,6 +36,9 @@ func (m *mysql) PostsByUserId(id int) ([]Post, error) {
 			&post.CreatedAt,
 			&post.UpdatedAt,
 			&post.Body,
+			&post.Author.FirstName,
+			&post.Author.LastName,
+			&post.Author.Login,
 		)
 		if err != nil {
 			log.Printf("posts.postbyuserid - scanning user: %v", err)
@@ -50,6 +53,45 @@ func (m *mysql) PostsByUserId(id int) ([]Post, error) {
 	}
 
 	return posts, nil
+}
+
+func (m *mysql) UserFeed(id int) (Feed, error) {
+	var feed Feed
+
+	query, ctx, cancel := GetQuery(GetUserFeedById)
+	defer cancel()
+
+	rows, err := m.db.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, fmt.Errorf("posts.UserFeed - sending query: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		post := Post{}
+
+		err := rows.Scan(
+			&post.ID,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+			&post.Body,
+			&post.Author.FirstName,
+			&post.Author.LastName,
+			&post.Author.Login,
+		)
+		if err != nil {
+			log.Printf("posts.UserFeed - scanning user: %v", err)
+			continue
+		}
+
+		feed = append(feed, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("posts.UserFeed - iterating through rows: %v", err)
+	}
+
+	return feed, nil
 }
 
 func (m *mysql) Add(post *Post, userId int) error {
