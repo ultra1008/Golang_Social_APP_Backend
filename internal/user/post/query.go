@@ -34,6 +34,7 @@ func init() {
 					, u.first_name
 					, u.last_name
 					, u.login
+					, u.id
 			  FROM posts as p
 			  LEFT JOIN users u on u.id = p.user_id
 			  WHERE p.user_id = ?
@@ -55,6 +56,7 @@ func init() {
 					, u.first_name
 					, u.last_name
 					, u.login
+					, u.id
               FROM posts p
 			  LEFT JOIN users u on u.id = p.user_id
               WHERE p.user_id IN (
@@ -62,7 +64,8 @@ func init() {
               	FROM friends f
               	WHERE user_id = ?
               )
-              ORDER BY p.created_at desc`,
+              ORDER BY p.created_at desc
+			  LIMIT 1000`,
 		Timeout: time.Second * 40,
 	}
 }

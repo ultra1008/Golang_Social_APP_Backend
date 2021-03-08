@@ -18,8 +18,8 @@ func Test_mysql_PostsByUserId_OneRow(t *testing.T) {
 
 	userId := 22
 
-	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login"})
-	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin")
+	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login", "id"})
+	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin", 1)
 
 	mock.ExpectQuery("SELECT p.id").WithArgs(userId).WillReturnRows(rows)
 
@@ -38,9 +38,9 @@ func Test_mysql_PostsByUserId_TwoRows(t *testing.T) {
 
 	userId := 22
 
-	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login"})
-	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "TestLogin")
-	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "TestLogin")
+	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login", "id"})
+	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "TestLogin", 1)
+	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "TestLogin", 1)
 
 	mock.ExpectQuery("SELECT p.id").WithArgs(userId).WillReturnRows(rows)
 
@@ -98,8 +98,8 @@ func Test_mysql_UserFeed_OneRow(t *testing.T) {
 
 	userId := 22
 
-	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login"})
-	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin")
+	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login", "id"})
+	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin", 1)
 
 	mock.ExpectQuery("SELECT p.id").WithArgs(userId).WillReturnRows(rows)
 
@@ -118,9 +118,9 @@ func Test_mysql_UserFeed_TwoRows(t *testing.T) {
 
 	userId := 22
 
-	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login"})
-	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin")
-	rows.AddRow(1, time.Now(), time.Now(), "Test1", "TestFirst1", "TestLast1", "Testlogin1")
+	rows := sqlmock.NewRows([]string{"id", "created_at", "updated_at", "body", "first_name", "last_name", "login", "id"})
+	rows.AddRow(1, time.Now(), time.Now(), "Test", "TestFirst", "TestLast", "Testlogin", 1)
+	rows.AddRow(1, time.Now(), time.Now(), "Test1", "TestFirst1", "TestLast1", "Testlogin1", 1)
 
 	mock.ExpectQuery("SELECT p.id").WithArgs(userId).WillReturnRows(rows)
 
