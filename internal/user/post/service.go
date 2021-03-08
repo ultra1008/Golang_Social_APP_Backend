@@ -2,6 +2,7 @@ package post
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/niklod/highload-social-network/internal/cache"
 	"github.com/niklod/highload-social-network/internal/queue/feed/producer"
@@ -91,6 +92,8 @@ func (s *Service) Add(post *Post) error {
 	if err != nil {
 		return fmt.Errorf("post.Service: %v", err)
 	}
+
+	post.CreatedAt = time.Now().UTC()
 
 	msg, err := post.AsByteJSON()
 	if err != nil {
