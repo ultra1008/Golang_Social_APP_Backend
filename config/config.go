@@ -11,14 +11,15 @@ var SessionName = "hsn-session"
 type Config struct {
 	DB        *DBConfig
 	Server    *HTTPServerConfig
+	RabbitMQ  *RabbitMQConfig
 	SecretKey string `envconfig:"SESSION_SECRET_KEY" default:"verysecretkey"`
 }
 
 type DBConfig struct {
 	Host     string `envconfig:"DB_HOST" default:"localhost"`
 	Port     int    `envconfig:"DB_PORT" default:"3306"`
-	Login    string `envconfig:"DB_LOGIN" default:"niklod"`
-	Password string `envconfig:"DB_PASSWORD" default:"VLQi4Vttuo6wFRqm"`
+	Login    string `envconfig:"DB_USER" default:""`
+	Password string `envconfig:"DB_PASSWORD" default:""`
 	DBName   string `envconfig:"DB_NAME" default:"hsn"`
 }
 
