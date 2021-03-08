@@ -17,13 +17,15 @@ services:
   #   networks:
   #     - backend
   rabbitmq:
-    image: rabbitmq:3.8-management-alpine
+    build:
+      context: .
+      dockerfile: ./deployment/rabbitmq/Dockerfile
     environment:
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_COOKIE}
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
-      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/etc:/etc/rabbitmq
       - ./deployment/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
       - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
       - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
