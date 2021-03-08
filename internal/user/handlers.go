@@ -531,7 +531,7 @@ func getUser(c *gin.Context) *User {
 		return nil
 	}
 
-	var user = User{}
+	var user User
 
 	user, ok = val.(User)
 	if !ok {

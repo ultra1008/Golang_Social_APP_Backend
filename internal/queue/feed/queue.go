@@ -35,6 +35,9 @@ func NewQueueChannel(conn *amqp.Connection, cfg *config.RabbitMQConfig) (*amqp.C
 		false,             // no wait
 		nil,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("feed.NewQueue - can't declare queue: %v", err)
+	}
 
 	err = ch.QueueBind(cfg.FeedQueueName, cfg.FeedRoutingKey, cfg.FeedExchangeName, false, nil)
 	if err != nil {
