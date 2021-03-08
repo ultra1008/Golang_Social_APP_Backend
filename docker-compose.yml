@@ -30,7 +30,6 @@ services:
       - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
       - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
     ports:
-      - "5672:5672"
       - "15672:15672"
     networks:
       - backend
