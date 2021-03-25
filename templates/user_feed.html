@@ -3,6 +3,11 @@
 <html lang="en">
 <head>
     {{template "head"}}
+    <style>
+        .feedPost {
+            margin-top:5px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -10,9 +15,9 @@
         {{template "errors" .Errors}}
         {{template "messages" .Messages}}
         <div class="row">
-            <div class="col">
+            <div class="col" id="feed">
                 {{range .Feed}}
-                    <div class="card" style="margin-top:5px;">
+                    <div class="card feedPost">
                         <div class="card-body">
                             <h5 class="card-title">
                                 <a href="/user/{{.Author.Login}}/">{{.Author.FirstName}} {{.Author.LastName}}</a>
@@ -25,6 +30,60 @@
         </div>
     </div>
     {{template "scripts"}}
+    <script>
+        let host = window.location.host
+        let port = window.location.port
+
+        let socket = new WebSocket("ws://" + host + "/ws/feed/{{ .AuthenticatedUser.Login }}");
+                console.log("Attempting Connection...");
+        
+                socket.onmessage = message => {
+                    processMessage(message)
+                };
+        
+                socket.onopen = () => {
+                    console.log("Successfully Connected");
+                };
+                
+                socket.onclose = event => {
+                    console.log("Socket Closed Connection: ", event);
+                };
+        
+                socket.onerror = error => {
+                    console.log("Socket Error: ", error);
+                };
+
+        function processMessage(msg){
+            const message = JSON.parse(msg.data);
+            console.log(message);
+
+            let feedContainer = document.getElementById("feed");
+
+            let postBlock = document.createElement("div")
+            postBlock.classList.add("card")
+            postBlock.classList.add("feedPost")
+
+            let postBody = document.createElement("div")
+            postBody.classList.add("card-body")
+            postBlock.append(postBody)
+
+            let postHeader = document.createElement("h5")
+            postHeader.classList.add("card-title")
+            postBody.append(postHeader)
+
+            let postHeaderLink = document.createElement("a")
+            postHeaderLink.setAttribute("href", "/users/" + message.data.Author.Login + "/")
+            postHeaderLink.textContent = message.data.Author.FirstName + " " + message.data.Author.LastName
+            postHeader.append(postHeaderLink)
+
+            let postText = document.createElement("p")
+            postText.classList.add("card-text")
+            postText.textContent = message.data.Body
+            postBody.append(postText)
+
+            feedContainer.prepend(postBlock)
+        }
+        </script>
 </body>
 </html>
 {{end}}

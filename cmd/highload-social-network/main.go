@@ -26,6 +26,7 @@ import (
 	"github.com/niklod/highload-social-network/internal/user/city"
 	"github.com/niklod/highload-social-network/internal/user/interest"
 	"github.com/niklod/highload-social-network/internal/user/post"
+	"github.com/niklod/highload-social-network/internal/websocket"
 )
 
 func main() {
@@ -56,13 +57,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// WebSockets pool
+	wsPool := websocket.NewPool()
+	go wsPool.Start()
+
 	// Services
 	cityService := city.NewService(cityRepo)
 	interestService := interest.NewService(interestRepo)
 	userService := user.NewService(userRepo, cityService, interestService)
 	feedProducer := producer.NewFeedProducer(ch, cfg.RabbitMQ, feedCache)
 	postService := post.NewService(postRepo, feedCache, feedProducer)
-	feedReceiver := receiver.NewFeedReceiver(ch, cfg.RabbitMQ, feedCache, postService, userService)
+	feedReceiver := receiver.NewFeedReceiver(ch, cfg.RabbitMQ, feedCache, postService, userService, wsPool)
 
 	// Starting feed update receivers
 	for i := 0; i < cfg.RabbitMQ.ReceiversCount; i++ {
@@ -80,6 +85,7 @@ func main() {
 		cookieStore,
 		interestService,
 	)
+	wsHandler := websocket.NewWebsocketHandler(wsPool, userService)
 
 	srv := server.NewHTTPServer(cfg.Server)
 	srv.BaseRouterGroup.Use(userHandler.AuthMiddleware)
@@ -114,6 +120,8 @@ func main() {
 
 	// Static
 	srv.BaseRouterGroup.Static("/public/", "./static")
+
+	srv.BaseRouterGroup.GET("/ws/feed/:login", wsHandler.HandleWS)
 
 	srv.Start()
 

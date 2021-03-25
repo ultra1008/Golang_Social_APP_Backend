@@ -9,6 +9,7 @@ import (
 	"github.com/niklod/highload-social-network/internal/cache"
 	"github.com/niklod/highload-social-network/internal/user"
 	"github.com/niklod/highload-social-network/internal/user/post"
+	"github.com/niklod/highload-social-network/internal/websocket"
 	"github.com/streadway/amqp"
 )
 
@@ -18,15 +19,17 @@ type FeedReceiver struct {
 	cache       cache.Cache
 	postService *post.Service
 	userService *user.Service
+	wsPool      *websocket.Pool
 }
 
-func NewFeedReceiver(ch *amqp.Channel, cfg *config.RabbitMQConfig, cache cache.Cache, postService *post.Service, userService *user.Service) *FeedReceiver {
+func NewFeedReceiver(ch *amqp.Channel, cfg *config.RabbitMQConfig, cache cache.Cache, postService *post.Service, userService *user.Service, ws *websocket.Pool) *FeedReceiver {
 	return &FeedReceiver{
 		ch:          ch,
 		cfg:         cfg,
 		cache:       cache,
 		postService: postService,
 		userService: userService,
+		wsPool:      ws,
 	}
 }
 
@@ -85,12 +88,17 @@ func (f *FeedReceiver) processNewMessage(m amqp.Delivery) error {
 	}
 
 	authorId := feedMsg.Author.ID
+
 	authorFriends, err := f.userService.Friends(authorId)
 	if err != nil {
 		return fmt.Errorf("receiver.processNewMessage - can't get author message: %v", cache.ErrInvalidCacheItem)
 	}
 
 	for _, friend := range authorFriends {
+		// Trying to find ws connection for friend
+		friendWsClient, friendWsExist := f.wsPool.Clients[friend.Login]
+
+		// Trying to find feed data in cache
 		v, ok := f.cache.Read(friend.ID)
 		if ok {
 			oldFeed, ok := v.(post.Feed)
@@ -103,17 +111,28 @@ func (f *FeedReceiver) processNewMessage(m amqp.Delivery) error {
 
 			f.cache.Write(friend.ID, newFeed)
 
+			// Updating friend feed via WebSocket connection
+			if friendWsExist {
+				friendWsClient.SendMessage(websocket.MessageBody{Data: feedMsg})
+			}
+
 			continue
 		}
 
+		// Cache is empty, getting data from DB
 		newFeed, err := f.postService.UserFeed(friend.ID)
 		if err != nil {
 			log.Printf("receiver.processNewMessage - can't get user feed: %v\n", err)
-
 			continue
 		}
 
+		// Update cache data
 		f.cache.Write(friend.ID, newFeed)
+
+		// Updating friend feed via WebSocket connection
+		if friendWsExist {
+			friendWsClient.SendMessage(websocket.MessageBody{Data: feedMsg})
+		}
 	}
 
 	return nil
